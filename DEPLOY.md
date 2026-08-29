@@ -20,19 +20,19 @@ Three branches, merged in this order. Each is a normal PR / merge.
 `maintenance-banner` and `migration-backfills` were branched off
 `perf-rbac-overhaul`, so:
 
-- Before merging **#1**, rebase it onto `main` so it carries *only* the banner:
-  ```bash
-  git checkout maintenance-banner
-  git rebase origin/main
-  git push --force-with-lease origin maintenance-banner
-  ```
-  (Already done if the branch history shows a single commit on top of `main`.)
-- **#3** merges cleanly after **#2**; if you'd rather not have a third deploy,
-  cherry-pick its one migration onto `perf-rbac-overhaul` before merging #2:
+- **#1 `maintenance-banner`** has already been rebased onto `main` — it is now a
+  single commit (5 files) and merges without pulling in any RBAC/perf code.
+  Just open the PR and merge it.
+- **#3 `migration-backfills`** merges cleanly after **#2** (the 6 perf commits it
+  shares with #2 are recognised as already merged, so only its 1 backfill
+  migration lands). If you'd rather do just two deploys, cherry-pick that one
+  commit onto `perf-rbac-overhaul` *before* merging #2:
   ```bash
   git checkout perf-rbac-overhaul
-  git cherry-pick <backfill-commit-sha>
+  git cherry-pick <backfill-commit-sha>   # "migration: backfill Spatie roles/permissions…"
+  git push origin perf-rbac-overhaul
   ```
+  Then #2 alone covers everything and you can skip #3.
 
 After each merge to `main`, deploy `main` with the steps in the matching section
 below.
@@ -106,11 +106,13 @@ Notes:
 ## 3. Build assets locally (before every deploy of `perf-rbac-overhaul`)
 
 `public/build/` is git-ignored, so it will **not** arrive via a git pull. Build
-it on your machine and include it in the upload:
+it on your machine — from the merged `main`, so the build picks up the
+maintenance-banner styles too — and include it in the upload:
 
 ```bash
+git checkout main && git pull        # after the banner + perf-rbac merges
 npm ci
-npm run build          # writes public/build/manifest.json + assets/*
+npm run build                        # writes public/build/manifest.json + assets/*
 ```
 
 Commit it to the deploy only if you deploy by git — see 4A.
@@ -218,18 +220,27 @@ then re-run `php artisan migrate --force`. Nothing else is affected.
 
 ## 6. Deploying `maintenance-banner` (Phase 1)
 
-Tiny change — 1 config file + 1 Blade component + 2 layout lines. No DB, no
-Composer, no new assets required beyond a rebuilt CSS bundle (the amber colours).
+Tiny, self-contained change — 1 config file, 1 Blade component, 2 layout lines
+(and it removes a dead default test). **No DB, no Composer, no asset build.**
+The branch is already rebased onto `main`, so it merges as a single commit.
 
-1. Merge `maintenance-banner` → `main`, then on the server:
+The current live site loads Tailwind from the CDN, which generates the banner's
+amber classes at runtime — so you do **not** need to touch `public/build`.
+
+1. Merge `maintenance-banner` → `main`.
+2. On the server:
    ```bash
-   cd ~/kpi && git pull --ff-only origin main
-   ```
-2. Upload the rebuilt `public/build/` (the banner adds a few Tailwind classes).
-3. ```bash
+   cd ~/kpi
+   git pull --ff-only origin main       # method 4A
+   # — or — upload the 4 changed files via File Manager (method 4B):
+   #   config/maintenance.php
+   #   resources/views/components/maintenance-banner.blade.php
+   #   resources/views/layouts/app.blade.php
+   #   resources/views/layouts/guest.blade.php
    php artisan optimize:clear && php artisan optimize
    ```
-4. Adjust the window any time from `.env` (then `php artisan config:clear`):
+   No `php artisan down` needed — this change can't break a running page.
+3. Adjust the window any time from `.env` (then `php artisan config:clear`):
    ```ini
    MAINTENANCE_BANNER_STARTS_AT="2026-08-30 14:00"
    MAINTENANCE_BANNER_ENDS_AT="2026-09-02 14:00"
