@@ -15,9 +15,7 @@ class StoreFacultyRequest extends FormRequest
 
     public function authorize(): bool
     {
-        $u = $this->user();
-
-        return $u && ($u->isAdmin() || $u->isPrincipal() || $u->isSectionHead());
+        return $this->user()?->can('faculty.manage') ?? false;
     }
 
     public function rules(): array

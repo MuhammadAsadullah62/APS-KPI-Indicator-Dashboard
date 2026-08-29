@@ -20,14 +20,12 @@ class FacultyController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_if($request->user()?->isFaculty(), 403);
-
         $query = User::query()
             ->where('role', UserRole::Faculty)
             ->with(['avatarMedia', 'assignedDepartments'])
             ->orderBy('name');
 
-        if ($request->user()?->isSectionHead() || $request->user()?->isFaculty()) {
+        if ($request->user()?->isSectionHead()) {
             $headWing = $request->user()->wing?->value;
             if ($headWing) {
                 $query->where('wing', $headWing);
@@ -131,7 +129,6 @@ class FacultyController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isAdmin() || $request->user()?->isPrincipal() || $request->user()?->isSectionHead(), 403);
         abort_unless($user->isFaculty(), 404);
 
         if ($request->user()->isSectionHead()) {

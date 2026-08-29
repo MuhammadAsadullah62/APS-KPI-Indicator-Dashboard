@@ -20,19 +20,19 @@
 
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-4">User Management</p>
                 <nav class="space-y-2">
-                    @if(auth()->user()->isAdmin() || auth()->user()->isPrincipal())
+                    @can('sectionheads.manage')
                         <x-dashboard.nav-link :href="route('sechead')" :active="$r === 'sechead'">
                             <svg class="w-5 h-5 {{ $r === 'sechead' ? 'text-aps-green' : 'text-slate-400 group-hover:text-aps-green' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             SecHead Management
                         </x-dashboard.nav-link>
-                    @endif
+                    @endcan
 
-                    @if(auth()->user()->isAdmin() || auth()->user()->isPrincipal() || auth()->user()->isSectionHead())
+                    @can('faculty.view')
                         <x-dashboard.nav-link :href="route('teachermanagement')" :active="$r === 'teachermanagement'">
                             <svg class="w-5 h-5 {{ $r === 'teachermanagement' ? 'text-aps-green' : 'text-slate-400 group-hover:text-aps-green' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                             Faculty Management
                         </x-dashboard.nav-link>
-                    @endif
+                    @endcan
 
                     @if(auth()->user()->canAccessObservations())
                         <x-dashboard.nav-link :href="route('observations')" :active="$r === 'observations'">

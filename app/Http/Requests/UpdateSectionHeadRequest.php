@@ -16,9 +16,7 @@ class UpdateSectionHeadRequest extends FormRequest
 
     public function authorize(): bool
     {
-        $user = $this->user();
-
-        return $user !== null && ($user->isAdmin() || $user->isPrincipal());
+        return $this->user()?->can('sectionheads.manage') ?? false;
     }
 
     public function rules(): array

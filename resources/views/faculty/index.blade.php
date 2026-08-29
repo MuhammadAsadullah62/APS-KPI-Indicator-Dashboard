@@ -9,7 +9,7 @@
 @section('header')
     <x-dashboard.page-header title="Faculty Hub">
         <x-slot name="actions">
-            @if(auth()->user()->isAdmin() || auth()->user()->isPrincipal() || auth()->user()->isSectionHead())
+            @can('faculty.manage')
             @php
                 $shCanRegister = auth()->user()->isAdmin() || auth()->user()->isPrincipal() || (auth()->user()->isSectionHead() && auth()->user()->wing);
             @endphp
@@ -21,7 +21,7 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                 Register Teacher
             </button>
-            @endif
+            @endcan
         </x-slot>
     </x-dashboard.page-header>
 @endsection

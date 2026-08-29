@@ -21,7 +21,6 @@ class SectionHeadController extends Controller
     public function index(Request $request): View
     {
         $user = $request->user();
-        abort_unless($user?->isAdmin() || $user?->isPrincipal() || $user?->isSectionHead(), 403);
 
         $sectionHeadsQuery = User::query()
             ->where('role', UserRole::SectionHead)
@@ -121,7 +120,6 @@ class SectionHeadController extends Controller
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isAdmin() || $request->user()?->isPrincipal(), 403);
         abort_unless($user->isSectionHead(), 404);
 
         $user->mediaItems()->get()->each(fn (Media $m) => $m->deleteWithFile());

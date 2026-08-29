@@ -215,17 +215,14 @@ class DashboardController extends Controller
             ->get();
     }
 
-    public function adminPanel()
+    public function adminPanel(): View
     {
-        abort_unless(auth()->user()?->isAdmin() || auth()->user()?->isPrincipal(), 403);
-
         return view('dashboard.admin-panel');
     }
 
     public function systemSettings(): View
     {
         $user = auth()->user();
-        abort_unless($user?->canAccessSystemSettings(), 403);
 
         if ($user->isFaculty()) {
             return view('dashboard.system-settings', [
@@ -304,7 +301,6 @@ class DashboardController extends Controller
         ]);
 
         $user = $request->user();
-        abort_unless($user?->isFaculty(), 403);
 
         $this->syncAvatarForUser($user, $request->file('avatar'));
 
