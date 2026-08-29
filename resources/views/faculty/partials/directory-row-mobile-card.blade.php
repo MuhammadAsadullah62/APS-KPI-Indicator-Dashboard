@@ -1,11 +1,9 @@
 @php($faDeptLine = $row->departmentsLabelForDisplay())
 <article class="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
     <div class="flex min-w-0 gap-3">
-        @if($row->avatarUrl())
-            <img src="{{ $row->avatarUrl() }}" alt="" class="h-12 w-12 shrink-0 rounded-xl border border-slate-100 object-cover shadow-sm">
-        @else
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-base font-black text-white shadow-sm">{{ $row->initials() }}</div>
-        @endif
+        <x-avatar :user="$row" box="h-12 w-12 rounded-xl" :px="48"
+            img-class="shrink-0 border border-slate-100 shadow-sm"
+            fallback-class="shrink-0 bg-emerald-500 text-white text-base shadow-sm" />
         <div class="min-w-0 flex-1">
             <p class="font-black leading-tight text-slate-900 [overflow-wrap:anywhere]">{{ $row->name }}</p>
             <p class="mt-1 text-[10px] font-bold uppercase text-slate-400">{{ $row->employee_id }}</p>

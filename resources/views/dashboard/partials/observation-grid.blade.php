@@ -11,7 +11,7 @@
         <div id="observee-card-{{ $obsUser->id }}" class="bg-white p-5 sm:p-6 lg:p-8 xl:p-10 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-sm hover:shadow-2xl transition-all scroll-mt-24 sm:scroll-mt-28 group min-w-0">
             <div class="flex items-center gap-3 sm:gap-6 min-w-0">
                 @if($obsUser->avatarUrl())
-                    <img src="{{ $obsUser->avatarUrl() }}" alt="" class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl md:rounded-[2rem] object-cover shadow-lg border border-slate-100 shrink-0">
+                    <img src="{{ $obsUser->avatarUrl() }}" alt="" loading="lazy" decoding="async" width="80" height="80" class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-xl sm:rounded-2xl md:rounded-[2rem] object-cover shadow-lg border border-slate-100 shrink-0">
                 @else
                     <div class="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 {{ $bg }} rounded-xl sm:rounded-2xl md:rounded-[2rem] flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl font-black shadow-lg shrink-0">{{ $obsUser->initials() }}</div>
                 @endif

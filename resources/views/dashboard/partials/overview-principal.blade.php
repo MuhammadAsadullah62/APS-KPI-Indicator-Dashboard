@@ -8,11 +8,9 @@
         <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
         <div class="relative flex flex-col lg:flex-row lg:items-center gap-8">
             <div class="shrink-0 flex justify-center lg:justify-start">
-                @if ($topStaff['user']->avatarUrl())
-                    <img src="{{ $topStaff['user']->avatarUrl() }}" alt="" class="w-36 h-36 md:w-44 md:h-44 rounded-[2rem] object-cover border-4 border-white shadow-xl shadow-slate-200">
-                @else
-                    <div class="w-36 h-36 md:w-44 md:h-44 rounded-[2rem] bg-aps-green flex items-center justify-center text-white font-black text-5xl border-4 border-white shadow-xl shadow-slate-200">{{ $topStaff['user']->initials() }}</div>
-                @endif
+                <x-avatar :user="$topStaff['user']" box="h-36 w-36 md:h-44 md:w-44 rounded-[2rem]" :px="176"
+                    img-class="border-4 border-white shadow-xl shadow-slate-200"
+                    fallback-class="bg-aps-green text-white text-5xl border-4 border-white shadow-xl shadow-slate-200" />
             </div>
             <div class="flex-1 min-w-0 text-center lg:text-left">
                 <p class="text-[11px] font-black text-amber-800 uppercase tracking-[0.2em] mb-3">Total staff rankings · 1st place</p>

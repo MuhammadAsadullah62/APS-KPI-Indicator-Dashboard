@@ -105,11 +105,9 @@
                                 @forelse ($recentUsers as $row)
                                 <tr class="group hover:bg-emerald-50/30 transition-colors">
                                     <td class="px-8 py-5 flex items-center gap-4">
-                                        @if($row->avatarUrl())
-                                            <img src="{{ $row->avatarUrl() }}" alt="" class="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-100">
-                                        @else
-                                            <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 font-black text-xs">{{ $row->initials() }}</div>
-                                        @endif
+                                        <x-avatar :user="$row" box="h-10 w-10 rounded-xl" :px="40"
+                                            img-class="shadow-sm border border-slate-100"
+                                            fallback-class="bg-slate-100 text-slate-500 text-xs" />
                                         <div>
                                             <p class="text-sm text-slate-800 leading-none">{{ $row->name }}</p>
                                             @php

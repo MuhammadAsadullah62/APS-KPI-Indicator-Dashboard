@@ -1,10 +1,8 @@
 <div class="flex items-center justify-between p-3 hover:bg-slate-50 rounded-2xl transition-all group/row font-semibold">
     <div class="flex items-center gap-3 min-w-0">
-        @if($row->avatarUrl())
-            <img src="{{ $row->avatarUrl() }}" alt="" class="w-8 h-8 rounded-lg object-cover shadow-sm shrink-0 border border-slate-100">
-        @else
-            <img src="https://ui-avatars.com/api/?name={{ urlencode($row->name) }}&background=064e3b&color=fff" class="w-8 h-8 rounded-lg shadow-sm shrink-0" alt="">
-        @endif
+        <x-avatar :user="$row" box="h-8 w-8 rounded-lg" :px="32"
+            img-class="shadow-sm shrink-0 border border-slate-100"
+            fallback-class="bg-aps-green text-white text-xs shadow-sm shrink-0" />
         <div class="leading-none min-w-0">
             <p class="text-xs font-black text-slate-800 truncate">{{ $row->name }}</p>
             <p class="text-[9px] text-slate-400 uppercase mt-1 truncate">{{ $row->departmentsLabelForDisplay() }}</p>

@@ -22,11 +22,9 @@
 @endphp
 <article class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm min-w-0">
     <div class="flex gap-3 min-w-0">
-        @if($row->avatarUrl())
-            <img src="{{ $row->avatarUrl() }}" alt="" class="h-12 w-12 shrink-0 rounded-xl object-cover shadow-sm ring-1 ring-slate-100">
-        @else
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-aps-green text-base font-black text-white shadow-sm">{{ $row->initials() }}</div>
-        @endif
+        <x-avatar :user="$row" box="h-12 w-12 rounded-xl" :px="48"
+            img-class="shrink-0 shadow-sm ring-1 ring-slate-100"
+            fallback-class="shrink-0 bg-aps-green text-white text-base shadow-sm" />
         <div class="min-w-0 flex-1">
             <p class="font-black leading-tight text-slate-900 [overflow-wrap:anywhere]">{{ $row->name }}</p>
             <p class="mt-1 text-[10px] font-bold uppercase text-slate-400">{{ $row->employee_id }}</p>

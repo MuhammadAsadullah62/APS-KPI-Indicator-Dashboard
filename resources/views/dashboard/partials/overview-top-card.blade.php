@@ -5,11 +5,9 @@
     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">{{ $label }}</p>
     @if ($row)
         <div class="flex items-center gap-4 mt-2">
-            @if($row['user']->avatarUrl())
-                <img src="{{ $row['user']->avatarUrl() }}" alt="" class="w-14 h-14 rounded-2xl object-cover border border-slate-100 shadow-sm shrink-0">
-            @else
-                <div class="w-14 h-14 rounded-2xl bg-aps-green flex items-center justify-center text-white font-black text-lg shrink-0">{{ $row['user']->initials() }}</div>
-            @endif
+            <x-avatar :user="$row['user']" box="h-14 w-14 rounded-2xl" :px="56"
+                img-class="border border-slate-100 shadow-sm shrink-0"
+                fallback-class="bg-aps-green text-white text-lg shrink-0" />
             <div class="min-w-0 flex-1">
                 <p class="font-black text-slate-800 truncate leading-tight">{{ $row['user']->name }}</p>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Rank #{{ $row['rank'] }} · {{ (int) $row['observation_count'] }} {{ (int) $row['observation_count'] === 1 ? 'visit' : 'visits' }}</p>

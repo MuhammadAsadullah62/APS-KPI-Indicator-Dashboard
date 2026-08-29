@@ -18,7 +18,7 @@
                 </div>
             @endif
             @if($u->avatarUrl())
-                <img src="{{ $u->avatarUrl() }}" alt="" class="w-10 h-10 rounded-xl shadow-md border-2 border-white object-cover group-hover:border-aps-green transition-all">
+                <img src="{{ $u->avatarUrl() }}" alt="" loading="lazy" decoding="async" width="40" height="40" class="w-10 h-10 rounded-xl shadow-md border-2 border-white object-cover group-hover:border-aps-green transition-all">
             @else
                 <span class="w-10 h-10 rounded-xl shadow-md border-2 border-white flex items-center justify-center bg-slate-100 text-slate-700 font-black text-xs group-hover:border-aps-green transition-all">{{ $u->initials() }}</span>
             @endif

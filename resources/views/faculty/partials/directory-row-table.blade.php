@@ -2,11 +2,9 @@
 <tr class="group transition-colors hover:bg-emerald-50/30">
     <td class="px-3 py-4 sm:px-6 sm:py-5 md:px-10 md:py-6">
         <div class="flex min-w-0 items-center gap-3 sm:gap-4">
-            @if($row->avatarUrl())
-                <img src="{{ $row->avatarUrl() }}" alt="" class="h-12 w-12 shrink-0 rounded-2xl border border-slate-100 object-cover shadow-sm">
-            @else
-                <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 text-lg font-black text-white shadow-sm">{{ $row->initials() }}</div>
-            @endif
+            <x-avatar :user="$row" box="h-12 w-12 rounded-2xl" :px="48"
+                img-class="shrink-0 border border-slate-100 shadow-sm"
+                fallback-class="shrink-0 bg-emerald-500 text-white text-lg shadow-sm" />
             <div>
                 <p class="font-black leading-none text-slate-800">{{ $row->name }}</p>
                 <p class="mt-2 text-[10px] font-bold uppercase text-slate-400">{{ $row->employee_id }}</p>

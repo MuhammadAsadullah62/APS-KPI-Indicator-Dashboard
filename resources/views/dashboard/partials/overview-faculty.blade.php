@@ -16,11 +16,9 @@
     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Your position</p>
     <div class="flex flex-col lg:flex-row lg:items-start gap-8">
         <div class="flex items-center gap-4 shrink-0">
-            @if ($viewer->avatarUrl())
-                <img src="{{ $viewer->avatarUrl() }}" alt="" class="w-16 h-16 rounded-2xl object-cover border border-slate-100 shadow-sm shrink-0">
-            @else
-                <div class="w-16 h-16 rounded-2xl bg-aps-green flex items-center justify-center text-white font-black text-xl shrink-0">{{ $viewer->initials() }}</div>
-            @endif
+            <x-avatar :user="$viewer" box="h-16 w-16 rounded-2xl" :px="64"
+                img-class="border border-slate-100 shadow-sm shrink-0"
+                fallback-class="bg-aps-green text-white text-xl shrink-0" />
             <div class="min-w-0">
                 <p class="font-black text-slate-800 truncate leading-tight text-lg">{{ $viewer->name }}</p>
                 @if ($avgAggregate !== null)
