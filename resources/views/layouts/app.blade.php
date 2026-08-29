@@ -4,6 +4,7 @@
     @include('partials.head', ['title' => trim($__env->yieldContent('title')) ?: 'APSACS Khanewal'])
 </head>
 <body class="@yield('body-class', 'flex h-screen min-h-0 w-full overflow-hidden text-slate-900')" style="background-color: #f1f5f9;">
+    <x-maintenance-banner />
     <x-dashboard.sidebar />
     <x-dashboard.mobile-nav-drawer />
     <main class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden @yield('main-class', 'bg-slate-100')">
