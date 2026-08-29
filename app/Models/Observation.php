@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\Department;
 use App\Enums\Wing;
+use App\Support\ObservationAnalytics;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +21,14 @@ class Observation extends Model
         'observation_wing',
         'observation_department',
     ];
+
+    protected static function booted(): void
+    {
+        $flush = static fn () => ObservationAnalytics::flushCaches();
+
+        static::saved($flush);
+        static::deleted($flush);
+    }
 
     protected function casts(): array
     {
@@ -85,60 +94,78 @@ class Observation extends Model
         return null;
     }
 
+    /**
+     * Normalised {bucket, metric_name, rating} rows for one rubric block.
+     *
+     * @param  array<string, mixed>  $session
+     * @param  list<string>  $keys
+     * @return list<array{bucket: string, metric_name: string, rating: float}>
+     */
+    private static function scoreRowsFromBlock(array $session, array $keys, string $bucket): array
+    {
+        $block = null;
+        foreach ($keys as $k) {
+            if (isset($session[$k]) && is_array($session[$k])) {
+                $block = $session[$k];
+                break;
+            }
+        }
+
+        if ($block === null) {
+            return [];
+        }
+
+        $rows = [];
+        foreach ($block as $name => $val) {
+            if (! is_numeric($val)) {
+                continue;
+            }
+            $metric = is_string($name) || is_int($name) ? (string) $name : '';
+            if ($metric === '') {
+                continue;
+            }
+            $rows[] = ['bucket' => $bucket, 'metric_name' => $metric, 'rating' => (float) $val];
+        }
+
+        return $rows;
+    }
+
     public function syncSessionsFromPayload(array $sessions): void
     {
         DB::transaction(function () use ($sessions) {
             $this->observationSessions()->delete();
+
+            $now = now();
+
             foreach (array_values($sessions) as $order => $session) {
                 if (! is_array($session)) {
                     continue;
                 }
-                $sessionNotes = self::sessionNotesFromSessionPayload($session);
+
                 $os = $this->observationSessions()->create([
                     'sort_order' => $order,
-                    'session_notes' => $sessionNotes,
+                    'session_notes' => self::sessionNotesFromSessionPayload($session),
                 ]);
-                foreach (['quantitative', 'Quantitative'] as $k) {
-                    if (! isset($session[$k]) || ! is_array($session[$k])) {
-                        continue;
-                    }
-                    foreach ($session[$k] as $name => $val) {
-                        if (! is_numeric($val)) {
-                            continue;
-                        }
-                        $metric = is_string($name) || is_int($name) ? (string) $name : '';
-                        if ($metric === '') {
-                            continue;
-                        }
-                        $os->scores()->create([
-                            'bucket' => 'quantitative',
-                            'metric_name' => $metric,
-                            'rating' => (float) $val,
-                        ]);
-                    }
-                    break;
+
+                $rows = [
+                    ...self::scoreRowsFromBlock($session, ['quantitative', 'Quantitative'], 'quantitative'),
+                    ...self::scoreRowsFromBlock($session, ['qualitative', 'Qualitative'], 'qualitative'),
+                ];
+
+                if ($rows === []) {
+                    continue;
                 }
-                foreach (['qualitative', 'Qualitative'] as $k) {
-                    if (! isset($session[$k]) || ! is_array($session[$k])) {
-                        continue;
-                    }
-                    foreach ($session[$k] as $name => $val) {
-                        if (! is_numeric($val)) {
-                            continue;
-                        }
-                        $metric = is_string($name) || is_int($name) ? (string) $name : '';
-                        if ($metric === '') {
-                            continue;
-                        }
-                        $os->scores()->create([
-                            'bucket' => 'qualitative',
-                            'metric_name' => $metric,
-                            'rating' => (float) $val,
-                        ]);
-                    }
-                    break;
-                }
+
+                // One INSERT per session rather than one per rubric item.
+                ObservationSessionScore::insert(array_map(static fn (array $row) => [
+                    ...$row,
+                    'observation_session_id' => $os->getKey(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ], $rows));
             }
         });
+
+        ObservationAnalytics::flushCaches();
     }
 }
