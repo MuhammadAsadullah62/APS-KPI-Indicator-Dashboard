@@ -21,15 +21,29 @@ permission cache both live there.
 ## Release steps
 
 ```bash
+php artisan down                   # maintenance mode — see note below
+
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build            # compiles resources/css/app.css + app.js into public/build
 
-php artisan migrate --force
-php artisan db:seed --class=RolePermissionSeeder --force   # roles + permissions (idempotent)
+php artisan migrate --force        # includes the RBAC backfill (see below)
 
 php artisan optimize               # config + route + view + event cache
 php artisan permission:cache-reset # clear Spatie's permission cache
+php artisan storage:link           # once, if not already linked
+
+php artisan up
 ```
+
+### Upgrading an already-live database
+
+`php artisan migrate --force` is now self-sufficient. The
+`2026_08_30_120000_backfill_spatie_roles_permissions_and_user_assignments`
+migration creates the roles/permissions and assigns every existing user the
+Spatie role matching its `users.role` column. It is idempotent and **only
+writes to the new Spatie tables** — no existing row (users, observations,
+media, departments …) is touched. `db:seed --class=RolePermissionSeeder` is
+therefore optional (still fine to run; it does the same thing).
 
 ### Important
 
@@ -41,6 +55,12 @@ php artisan permission:cache-reset # clear Spatie's permission cache
   `users.role` column.
 - After changing the role→permission matrix in `app/Support/Rbac.php`, re-run the
   seeder and `permission:cache-reset`.
+- **Maintenance mode:** run `php artisan down` before swapping code and
+  `php artisan up` after `migrate` completes. Between the file swap and `migrate`
+  the new `User` model references the not-yet-created Spatie tables; the model
+  guards against it (mid-deploy queries are caught and skipped) but read paths
+  such as `@can` in a view would still error, so a short maintenance window is
+  the clean way to deploy this release.
 
 ## Storage
 

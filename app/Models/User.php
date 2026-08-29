@@ -32,14 +32,18 @@ class User extends Authenticatable
             }
 
             $value = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
-            if ($value === '' || $user->roles->pluck('name')->all() === [$value]) {
+            if ($value === '') {
                 return;
             }
 
             try {
-                $user->syncRoles([$value]);
+                if ($user->roles->pluck('name')->all() !== [$value]) {
+                    $user->syncRoles([$value]);
+                }
             } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
                 // Roles not seeded yet (e.g. a bare test DB) — nothing to sync.
+            } catch (\Illuminate\Database\QueryException) {
+                // Permission tables not migrated yet (mid-deploy window) — skip.
             }
         });
     }
