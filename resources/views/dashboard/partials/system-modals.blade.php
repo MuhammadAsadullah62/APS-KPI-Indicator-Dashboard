@@ -7,7 +7,8 @@
         <div class="p-12 space-y-12">
             <div class="flex flex-col sm:flex-row sm:items-start gap-10 sm:gap-12">
                 <div class="relative shrink-0 mx-auto sm:mx-0">
-                    <img id="overviewUserAvatar" src="" alt="" class="w-32 h-32 rounded-[2.5rem] object-cover shadow-md border border-slate-100 hidden">
+                    <img id="overviewUserAvatar" src="" alt="" class="w-32 h-32 rounded-[2.5rem] object-cover shadow-md border border-slate-100 hidden"
+                        onerror="this.onerror=null;this.classList.add('hidden');document.getElementById('overviewUserInitials').classList.remove('hidden');">
                     <div id="overviewUserInitials" class="w-32 h-32 bg-aps-green rounded-[2.5rem] flex items-center justify-center text-white text-5xl font-black"></div>
                 </div>
                 <div class="grid w-full min-w-0 sm:flex-1 grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5 font-semibold text-left">

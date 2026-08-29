@@ -65,12 +65,9 @@
                             @enderror
                             <div class="flex flex-col sm:flex-row sm:items-center gap-8">
                                 <div class="shrink-0">
-                                    @if($u->avatarUrl())
-                                        <img id="facultySelfAvatarPreview" src="{{ $u->avatarUrl() }}" alt="" class="w-28 h-28 rounded-[2rem] object-cover border border-slate-200 shadow-md">
-                                    @else
-                                        <div id="facultySelfAvatarPlaceholder" class="w-28 h-28 rounded-[2rem] bg-slate-100 flex items-center justify-center text-slate-500 font-black text-2xl border border-slate-200">{{ $u->initials() }}</div>
-                                        <img id="facultySelfAvatarPreview" src="" alt="" class="hidden w-28 h-28 rounded-[2rem] object-cover border border-slate-200 shadow-md">
-                                    @endif
+                                    <div id="facultySelfAvatarPlaceholder" class="w-28 h-28 rounded-[2rem] bg-slate-100 flex items-center justify-center text-slate-500 font-black text-2xl border border-slate-200 {{ $u->avatarUrl() ? 'hidden' : '' }}">{{ $u->initials() }}</div>
+                                    <img id="facultySelfAvatarPreview" src="{{ $u->avatarUrl() ?: '' }}" alt="" class="{{ $u->avatarUrl() ? '' : 'hidden' }} w-28 h-28 rounded-[2rem] object-cover border border-slate-200 shadow-md"
+                                        onerror="this.onerror=null;this.classList.add('hidden');document.getElementById('facultySelfAvatarPlaceholder').classList.remove('hidden');">
                                 </div>
                                 <div class="flex-1 space-y-4">
                                     <input type="file" name="avatar" accept="image/*" required class="block w-full text-sm font-semibold text-slate-600 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-sm file:font-black file:bg-slate-900 file:text-white hover:file:bg-aps-green file:cursor-pointer cursor-pointer" onchange="previewImage(this, 'facultySelfAvatarPreview', 'facultySelfAvatarPlaceholder')">

@@ -19,9 +19,13 @@
 @endphp
 
 @if ($resolvedUrl)
+    {{-- If the file 404s / 403s / is corrupt, hide the <img> and reveal the initials
+         sibling instead of showing a broken-image icon. --}}
     <img src="{{ $resolvedUrl }}" alt="" loading="lazy" decoding="async"
         width="{{ $px }}" height="{{ $px }}"
-        class="{{ $box }} object-cover {{ $imgClass }}">
+        class="{{ $box }} object-cover {{ $imgClass }}"
+        onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';">
+    <span class="{{ $box }} {{ $fallbackClass }} items-center justify-center font-black" style="display:none">{{ $resolvedInitials }}</span>
 @else
-    <div class="{{ $box }} {{ $fallbackClass }} flex items-center justify-center font-black">{{ $resolvedInitials }}</div>
+    <span class="{{ $box }} {{ $fallbackClass }} flex items-center justify-center font-black">{{ $resolvedInitials }}</span>
 @endif
