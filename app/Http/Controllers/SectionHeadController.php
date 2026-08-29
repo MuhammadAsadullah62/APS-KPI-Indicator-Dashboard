@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Department;
-use App\Enums\MediaType;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreSectionHeadRequest;
 use App\Http\Requests\UpdateSectionHeadRequest;
 use App\Models\Media;
 use App\Models\User;
+use App\Support\AvatarService;
 use App\Support\InstitutionalEmployeeId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -79,7 +79,7 @@ class SectionHeadController extends Controller
 
         $user->syncDepartments($departmentValues);
 
-        $this->syncAvatar($user, $request->file('avatar'));
+        AvatarService::replaceFor($user, $request->file('avatar'));
 
         return redirect()->route('sechead')->with('status', 'Section head registered. Employee ID: '.$user->employee_id);
     }
@@ -113,12 +113,12 @@ class SectionHeadController extends Controller
 
         $user->syncDepartments($departmentValues);
 
-        $this->syncAvatar($user, $request->file('avatar'));
+        AvatarService::replaceFor($user, $request->file('avatar'));
 
         return redirect()->route('sechead')->with('status', 'Section head updated.');
     }
 
-    public function destroy(Request $request, User $user): RedirectResponse
+    public function destroy(User $user): RedirectResponse
     {
         abort_unless($user->isSectionHead(), 404);
 
@@ -126,26 +126,5 @@ class SectionHeadController extends Controller
         $user->delete();
 
         return redirect()->route('sechead')->with('status', 'Section head removed.');
-    }
-
-    private function syncAvatar(User $user, ?\Illuminate\Http\UploadedFile $file): void
-    {
-        if ($file === null) {
-            return;
-        }
-
-        $user->mediaItems()->where('collection_name', 'avatar')->get()->each(fn (Media $m) => $m->deleteWithFile());
-
-        $path = $file->store('avatars', 'public');
-
-        $user->mediaItems()->create([
-            'collection_name' => 'avatar',
-            'disk' => 'public',
-            'path' => $path,
-            'original_filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize() ?: null,
-            'type' => MediaType::Image,
-        ]);
     }
 }

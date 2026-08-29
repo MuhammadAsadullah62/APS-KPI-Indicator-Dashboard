@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Department;
-use App\Enums\MediaType;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreFacultyRequest;
 use App\Http\Requests\UpdateFacultyRequest;
 use App\Models\Media;
 use App\Models\User;
+use App\Support\AvatarService;
 use App\Support\InstitutionalEmployeeId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -74,7 +74,7 @@ class FacultyController extends Controller
 
         $user->syncDepartments($departmentValues);
 
-        $this->syncAvatar($user, $request->file('avatar'));
+        AvatarService::replaceFor($user, $request->file('avatar'));
 
         return redirect()->route('teachermanagement')->with('status', 'Faculty member registered. Employee ID: '.$user->employee_id);
     }
@@ -122,7 +122,7 @@ class FacultyController extends Controller
 
         $user->syncDepartments($departmentValues);
 
-        $this->syncAvatar($user, $request->file('avatar'));
+        AvatarService::replaceFor($user, $request->file('avatar'));
 
         return redirect()->route('teachermanagement')->with('status', 'Faculty record updated.');
     }
@@ -142,26 +142,5 @@ class FacultyController extends Controller
         $user->delete();
 
         return redirect()->route('teachermanagement')->with('status', 'Faculty member removed.');
-    }
-
-    private function syncAvatar(User $user, ?\Illuminate\Http\UploadedFile $file): void
-    {
-        if ($file === null) {
-            return;
-        }
-
-        $user->mediaItems()->where('collection_name', 'avatar')->get()->each(fn (Media $m) => $m->deleteWithFile());
-
-        $path = $file->store('avatars', 'public');
-
-        $user->mediaItems()->create([
-            'collection_name' => 'avatar',
-            'disk' => 'public',
-            'path' => $path,
-            'original_filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize() ?: null,
-            'type' => MediaType::Image,
-        ]);
     }
 }
