@@ -257,9 +257,9 @@ amber classes at runtime — so you do **not** need to touch `public/build`.
 - **Code:** `git checkout <previous-tag-or-sha>` (or re-upload the previous zip),
   then `php artisan optimize:clear && php artisan optimize`.
 - **Database:** no rollback needed — the new tables/indexes are inert for the old
-  code. If you must, `php artisan migrate:rollback --step=3` drops the permission
-  tables + indexes (the backfill migration's `down()` removes only the roles it
-  created). Existing data is never touched either way.
+  code. If you must: `php artisan migrate:rollback --step=2` for the
+  `perf-rbac-overhaul`-only path (permission tables + indexes), or `--step=3` if
+  `migration-backfills` was included. Existing data is never touched either way.
 - Keep a `mysqldump` from just before the deploy regardless:
   cPanel → *phpMyAdmin* → *Export*, or
   `mysqldump -u kpidashb_admin -p kpidashb_kpidashboard > ~/pre-deploy.sql`
