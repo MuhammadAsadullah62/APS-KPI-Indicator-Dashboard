@@ -5,6 +5,7 @@ namespace App\Http\Requests;
 use App\Enums\Department;
 use App\Enums\UserRole;
 use App\Enums\Wing;
+use App\Http\Requests\Concerns\NormalizesDepartmentInput;
 use App\Http\Requests\Concerns\ValidatesSectionHeadOtherDepartment;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -12,6 +13,7 @@ use Illuminate\Validation\Validator;
 
 class StoreSectionHeadRequest extends FormRequest
 {
+    use NormalizesDepartmentInput;
     use ValidatesSectionHeadOtherDepartment;
 
     public function authorize(): bool

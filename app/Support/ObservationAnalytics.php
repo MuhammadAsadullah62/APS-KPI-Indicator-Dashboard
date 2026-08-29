@@ -555,139 +555,42 @@ final class ObservationAnalytics
         return round($sum / $n, 1);
     }
 
+    private static function ratingToPercent(?float $avgRating): ?float
+    {
+        return $avgRating === null ? null : round(($avgRating / 5) * 100, 1);
+    }
+
     public static function kpiQuantitativeCardsFromObservations(iterable $observations): array
     {
-        $collection = self::sortedObservationCollection($observations);
-        $quant = self::averagedSessionMetrics($collection)['quantitative'];
-
-        $ratingToPct = function (?float $avgRating): ?float {
-            if ($avgRating === null) {
-                return null;
-            }
-
-            return round(($avgRating / 5) * 100, 1);
-        };
-
-        $cards = [];
-        foreach (self::QUANT_METRICS as $name) {
-            $cards[] = [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => $name,
-                'display' => self::formatPct($ratingToPct($quant[$name] ?? null)),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', $name)),
-            ];
-        }
-
-        return $cards;
+        return self::kpiMetricCards($observations, 'quantitative', 'Quantitative', self::QUANT_METRICS);
     }
 
     public static function kpiQualitativeCardsFromObservations(iterable $observations): array
     {
+        return self::kpiMetricCards($observations, 'qualitative', 'Qualitative', self::QUAL_KPI_METRICS);
+    }
+
+    /**
+     * @param  list<string>  $metricNames
+     * @return list<array<string, mixed>>
+     */
+    private static function kpiMetricCards(iterable $observations, string $bucket, string $label, array $metricNames): array
+    {
         $collection = self::sortedObservationCollection($observations);
-        $qual = self::averagedSessionMetrics($collection)['qualitative'];
-
-        $ratingToPct = function (?float $avgRating): ?float {
-            if ($avgRating === null) {
-                return null;
-            }
-
-            return round(($avgRating / 5) * 100, 1);
-        };
+        $averages = self::averagedSessionMetrics($collection)[$bucket];
 
         $cards = [];
-        foreach (self::QUAL_KPI_METRICS as $name) {
+        foreach ($metricNames as $name) {
             $cards[] = [
-                'category' => 'qualitative',
-                'category_label' => 'Qualitative',
+                'category' => $bucket,
+                'category_label' => $label,
                 'metric_name' => $name,
-                'display' => self::formatPct($ratingToPct($qual[$name] ?? null)),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'qualitative', $name)),
+                'display' => self::formatPct(self::ratingToPercent($averages[$name] ?? null)),
+                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, $bucket, $name)),
             ];
         }
 
         return $cards;
-    }
-
-    public static function kpiCardsFromObservations(iterable $observations): array
-    {
-        $collection = self::sortedObservationCollection($observations);
-        $metrics = self::averagedSessionMetrics($collection);
-        $quant = $metrics['quantitative'];
-        $qual = $metrics['qualitative'];
-
-        $overallAvg = $collection->filter(fn (Observation $o) => $o->aggregate_percent !== null)->avg('aggregate_percent');
-        $overallPct = $overallAvg !== null ? round((float) $overallAvg, 1) : null;
-
-        $ratingToPct = function (?float $avgRating): ?float {
-            if ($avgRating === null) {
-                return null;
-            }
-
-            return round(($avgRating / 5) * 100, 1);
-        };
-
-        $pickQ = fn (string $name) => $ratingToPct($quant[$name] ?? null);
-        $pickL = fn (string $name) => $ratingToPct($qual[$name] ?? null);
-
-        return [
-            [
-                'category' => 'overall',
-                'category_label' => 'Summary',
-                'metric_name' => 'Overall observation score',
-                'display' => $overallPct !== null ? $overallPct.'%' : '—',
-                ...self::sparkPathsForCard(self::sparklineAggregatePaths($collection)),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Student Achievement',
-                'display' => self::formatPct($pickQ('Student Achievement')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Student Achievement')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Lesson Planning',
-                'display' => self::formatPct($pickQ('Lesson Planning')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Lesson Planning')),
-            ],
-            [
-                'category' => 'qualitative',
-                'category_label' => 'Qualitative',
-                'metric_name' => 'Student-Centricity',
-                'display' => self::formatPct($pickL('Student-Centricity')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'qualitative', 'Student-Centricity')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Attendance',
-                'display' => self::formatPct($pickQ('Attendance')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Attendance')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Assessment Quality',
-                'display' => self::formatPct($pickQ('Assessment Quality')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Assessment Quality')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Student Progress',
-                'display' => self::formatPct($pickQ('Student Progress')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Student Progress')),
-            ],
-            [
-                'category' => 'qualitative',
-                'category_label' => 'Qualitative',
-                'metric_name' => 'Innovation',
-                'display' => self::formatPct($pickL('Innovation')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'qualitative', 'Innovation')),
-            ],
-        ];
     }
 
     private static function sortedObservationCollection(iterable $observations): Collection

@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Department;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreFacultyRequest;
@@ -51,14 +50,9 @@ class FacultyController extends Controller
 
         $employeeId = InstitutionalEmployeeId::next($wing, false);
 
-        $departmentValues = collect($request->input('departments', []))
-            ->map(fn ($v) => is_string($v) ? $v : null)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $departmentValues = $request->normalizedDepartments();
 
-        $hasOther = in_array(Department::Other->value, $departmentValues, true);
+        $hasOther = $request->hasOtherDepartment();
 
         $user = User::create([
             'name' => $request->string('name')->toString(),
@@ -96,14 +90,9 @@ class FacultyController extends Controller
 
         abort_if($request->user()->isSectionHead() && ! $wing, 403);
 
-        $departmentValues = collect($request->input('departments', []))
-            ->map(fn ($v) => is_string($v) ? $v : null)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $departmentValues = $request->normalizedDepartments();
 
-        $hasOther = in_array(Department::Other->value, $departmentValues, true);
+        $hasOther = $request->hasOtherDepartment();
 
         $data = [
             'name' => $request->string('name')->toString(),

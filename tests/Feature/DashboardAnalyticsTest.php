@@ -89,6 +89,23 @@ class DashboardAnalyticsTest extends TestCase
         $this->assertLessThan(20, $count, "Principal dashboard issued {$count} queries");
     }
 
+    public function test_every_role_dashboard_renders(): void
+    {
+        $principal = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);
+        $sh = User::factory()->create(['role' => UserRole::SectionHead, 'wing' => Wing::Senior]);
+        $faculty = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::Senior]);
+
+        $this->recordObservation($sh, $faculty, 4.0);
+        $this->recordObservation($principal, $sh, 3.0);
+
+        foreach ([$principal, $sh, $faculty] as $user) {
+            $this->actingAs($user)->get('/')->assertOk();
+        }
+
+        $this->actingAs($sh)->get('/quantitative-observations')->assertOk();
+        $this->actingAs($faculty)->get('/qualitative-observations')->assertOk();
+    }
+
     public function test_new_observation_invalidates_cached_rankings(): void
     {
         $principal = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);

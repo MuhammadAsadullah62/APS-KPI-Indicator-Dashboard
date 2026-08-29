@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Department;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreSectionHeadRequest;
@@ -54,14 +53,9 @@ class SectionHeadController extends Controller
 
     public function store(StoreSectionHeadRequest $request): RedirectResponse
     {
-        $departmentValues = collect($request->input('departments', []))
-            ->map(fn ($v) => is_string($v) ? $v : null)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $departmentValues = $request->normalizedDepartments();
 
-        $hasOther = in_array(Department::Other->value, $departmentValues, true);
+        $hasOther = $request->hasOtherDepartment();
 
         $wing = $request->enum('wing', Wing::class);
 
@@ -88,14 +82,9 @@ class SectionHeadController extends Controller
     {
         abort_unless($user->isSectionHead(), 404);
 
-        $departmentValues = collect($request->input('departments', []))
-            ->map(fn ($v) => is_string($v) ? $v : null)
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+        $departmentValues = $request->normalizedDepartments();
 
-        $hasOther = in_array(Department::Other->value, $departmentValues, true);
+        $hasOther = $request->hasOtherDepartment();
 
         $data = [
             'name' => $request->string('name')->toString(),
