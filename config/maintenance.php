@@ -22,9 +22,9 @@ return [
 
         'timezone' => env('MAINTENANCE_BANNER_TIMEZONE', 'Asia/Karachi'),
 
-        // Sunday 2:00 PM  ->  Wednesday 2:00 PM
-        'starts_at' => env('MAINTENANCE_BANNER_STARTS_AT', '2026-08-30 14:00'),
-        'ends_at' => env('MAINTENANCE_BANNER_ENDS_AT', '2026-09-02 14:00'),
+        // Thursday 2:00 PM  ->  Monday 2:00 PM
+        'starts_at' => env('MAINTENANCE_BANNER_STARTS_AT', '2026-09-03 14:00'),
+        'ends_at' => env('MAINTENANCE_BANNER_ENDS_AT', '2026-09-07 14:00'),
     ],
 
 ];
