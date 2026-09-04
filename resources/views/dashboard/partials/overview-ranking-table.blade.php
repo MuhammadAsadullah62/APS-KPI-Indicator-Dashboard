@@ -28,11 +28,9 @@
                         </td>
                         <td class="px-8 py-5">
                             <div class="flex items-center gap-3 min-w-0">
-                                @if($row['user']->avatarUrl())
-                                    <img src="{{ $row['user']->avatarUrl() }}" alt="" class="w-10 h-10 rounded-xl object-cover border border-slate-100 shrink-0">
-                                @else
-                                    <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center text-white font-black text-sm shrink-0">{{ $row['user']->initials() }}</div>
-                                @endif
+                                <x-avatar :user="$row['user']" box="h-10 w-10 rounded-xl" :px="40"
+                                    img-class="border border-slate-100 shrink-0"
+                                    fallback-class="bg-emerald-500 text-white text-sm shrink-0" />
                                 <div class="min-w-0">
                                     <p class="font-black text-slate-800 truncate">{{ $row['user']->name }}</p>
                                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $row['user']->employee_id ?? '—' }}</p>

@@ -65,12 +65,9 @@
                             @enderror
                             <div class="flex flex-col sm:flex-row sm:items-center gap-8">
                                 <div class="shrink-0">
-                                    @if($u->avatarUrl())
-                                        <img id="facultySelfAvatarPreview" src="{{ $u->avatarUrl() }}" alt="" class="w-28 h-28 rounded-[2rem] object-cover border border-slate-200 shadow-md">
-                                    @else
-                                        <div id="facultySelfAvatarPlaceholder" class="w-28 h-28 rounded-[2rem] bg-slate-100 flex items-center justify-center text-slate-500 font-black text-2xl border border-slate-200">{{ $u->initials() }}</div>
-                                        <img id="facultySelfAvatarPreview" src="" alt="" class="hidden w-28 h-28 rounded-[2rem] object-cover border border-slate-200 shadow-md">
-                                    @endif
+                                    <div id="facultySelfAvatarPlaceholder" class="w-28 h-28 rounded-[2rem] bg-slate-100 flex items-center justify-center text-slate-500 font-black text-2xl border border-slate-200 {{ $u->avatarUrl() ? 'hidden' : '' }}">{{ $u->initials() }}</div>
+                                    <img id="facultySelfAvatarPreview" src="{{ $u->avatarUrl() ?: '' }}" alt="" class="{{ $u->avatarUrl() ? '' : 'hidden' }} w-28 h-28 rounded-[2rem] object-cover border border-slate-200 shadow-md"
+                                        onerror="this.onerror=null;this.classList.add('hidden');document.getElementById('facultySelfAvatarPlaceholder').classList.remove('hidden');">
                                 </div>
                                 <div class="flex-1 space-y-4">
                                     <input type="file" name="avatar" accept="image/*" required class="block w-full text-sm font-semibold text-slate-600 file:mr-4 file:py-3 file:px-6 file:rounded-2xl file:border-0 file:text-sm file:font-black file:bg-slate-900 file:text-white hover:file:bg-aps-green file:cursor-pointer cursor-pointer" onchange="previewImage(this, 'facultySelfAvatarPreview', 'facultySelfAvatarPlaceholder')">
@@ -105,11 +102,9 @@
                                 @forelse ($recentUsers as $row)
                                 <tr class="group hover:bg-emerald-50/30 transition-colors">
                                     <td class="px-8 py-5 flex items-center gap-4">
-                                        @if($row->avatarUrl())
-                                            <img src="{{ $row->avatarUrl() }}" alt="" class="w-10 h-10 rounded-xl object-cover shadow-sm border border-slate-100">
-                                        @else
-                                            <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500 font-black text-xs">{{ $row->initials() }}</div>
-                                        @endif
+                                        <x-avatar :user="$row" box="h-10 w-10 rounded-xl" :px="40"
+                                            img-class="shadow-sm border border-slate-100"
+                                            fallback-class="bg-slate-100 text-slate-500 text-xs" />
                                         <div>
                                             <p class="text-sm text-slate-800 leading-none">{{ $row->name }}</p>
                                             @php

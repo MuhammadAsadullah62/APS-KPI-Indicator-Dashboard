@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ObservationAnalytics;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,6 +14,15 @@ class ObservationSession extends Model
         'sort_order',
         'session_notes',
     ];
+
+    protected static function booted(): void
+    {
+        static::saved(static fn () => ObservationAnalytics::flushCaches());
+        static::deleted(static fn () => ObservationAnalytics::flushCaches());
+    }
+
+    /** @var array{quantitative: array<string, float>, qualitative: array<string, float>, session_notes: string}|null */
+    private ?array $rubricSessionArray = null;
 
     public function observation(): BelongsTo
     {
@@ -29,6 +39,10 @@ class ObservationSession extends Model
      */
     public function toRubricSessionArray(): array
     {
+        if ($this->rubricSessionArray !== null) {
+            return $this->rubricSessionArray;
+        }
+
         $quant = [];
         $qual = [];
         $scores = $this->relationLoaded('scores') ? $this->scores : $this->scores()->get();
@@ -42,7 +56,7 @@ class ObservationSession extends Model
 
         $sessionNotes = is_string($this->session_notes) ? $this->session_notes : '';
 
-        return [
+        return $this->rubricSessionArray = [
             'quantitative' => $quant,
             'qualitative' => $qual,
             'session_notes' => $sessionNotes,

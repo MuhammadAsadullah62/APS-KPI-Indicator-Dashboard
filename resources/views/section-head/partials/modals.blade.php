@@ -84,7 +84,8 @@
         <div class="p-12 space-y-10">
             <div class="flex flex-col sm:flex-row sm:items-start gap-10">
                 <div class="relative w-32 h-32 shrink-0 mx-auto sm:mx-0">
-                    <img id="viewShAvatar" src="" alt="" class="hidden w-32 h-32 rounded-[2.5rem] object-cover shadow-xl border border-slate-100">
+                    <img id="viewShAvatar" src="" alt="" class="hidden w-32 h-32 rounded-[2.5rem] object-cover shadow-xl border border-slate-100"
+                        onerror="this.onerror=null;this.classList.add('hidden');document.getElementById('viewShInitials').classList.remove('hidden');">
                     <div id="viewShInitials" class="w-32 h-32 bg-aps-green rounded-[2.5rem] flex items-center justify-center text-white text-5xl font-black shadow-xl">?</div>
                 </div>
                 <div class="grid w-full min-w-0 sm:flex-1 grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">

@@ -2,15 +2,35 @@
 
 namespace App\Support;
 
-use App\Enums\UserRole;
 use App\Models\Observation;
 use App\Models\ObservationSession;
 use App\Models\User;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 
 final class ObservationAnalytics
 {
+    /** Org-wide ranking data survives ~10 min between observation writes. */
+    private const CACHE_TTL = 600;
+
+    private const CACHE_KEYS = ['obs:analytics:summaries:all', 'obs:analytics:board:all'];
+
+    /** Per-request memo so a single dashboard render never repeats a query. */
+    private static array $memo = [];
+
+    /**
+     * Drop every cached / memoised aggregate. Called from the Observation model
+     * events whenever an observation (or its sessions / scores) changes.
+     */
+    public static function flushCaches(): void
+    {
+        self::$memo = [];
+        self::$normalizedBlockCache = [];
+        foreach (self::CACHE_KEYS as $key) {
+            Cache::forget($key);
+        }
+    }
+
     public const QUANT_METRICS = ['Student Achievement', 'Student Progress', 'Lesson Planning', 'Assessment Quality', 'Attendance'];
 
     public const QUAL_METRICS = ['Student-Centricity', 'Professional Ethics', 'Classroom Culture', 'Communication', 'Collaboration', 'Innovation'];
@@ -25,45 +45,70 @@ final class ObservationAnalytics
 
     public static function summariesByObservee(?int $observerOnly = null): Collection
     {
-        $query = Observation::query()
-            ->whereNotNull('aggregate_percent');
+        $memoKey = 'summaries:'.($observerOnly ?? 'all');
 
-        if ($observerOnly !== null) {
-            $query->where('observer_id', $observerOnly);
+        if (isset(self::$memo[$memoKey])) {
+            return self::$memo[$memoKey];
         }
 
-        return $query
-            ->groupBy('observee_id')
-            ->selectRaw('observee_id, ROUND(AVG(aggregate_percent), 2) as avg_score, COUNT(*) as observation_count')
-            ->get()
+        $build = function () use ($observerOnly): array {
+            $query = Observation::query()->whereNotNull('aggregate_percent');
+
+            if ($observerOnly !== null) {
+                $query->where('observer_id', $observerOnly);
+            }
+
+            return $query
+                ->groupBy('observee_id')
+                ->selectRaw('observee_id, ROUND(AVG(aggregate_percent), 2) as avg_score, COUNT(*) as observation_count')
+                ->get()
+                ->map(fn ($row) => [
+                    'observee_id' => (int) $row->observee_id,
+                    'avg_score' => (float) $row->avg_score,
+                    'observation_count' => (int) $row->observation_count,
+                ])
+                ->all();
+        };
+
+        $rows = $observerOnly === null
+            ? Cache::remember('obs:analytics:summaries:all', self::CACHE_TTL, $build)
+            : $build();
+
+        return self::$memo[$memoKey] = collect($rows)
+            ->map(fn (array $r) => (object) $r)
             ->keyBy('observee_id');
     }
 
-    public static function rankedUsers(?callable $scopeUsers = null, ?int $observerOnly = null): Collection
+    /**
+     * All ranked observees (section heads + faculty) in one pass: a single
+     * summary query + a single user query, sorted by score descending. The
+     * ranked* helpers are in-memory slices of this, so a dashboard that needs
+     * five wing tables issues two queries, not a dozen.
+     */
+    public static function rankingBoard(?int $observerOnly = null): Collection
     {
+        $memoKey = 'board:'.($observerOnly ?? 'all');
+
+        if (isset(self::$memo[$memoKey])) {
+            return self::$memo[$memoKey];
+        }
+
         $summaries = self::summariesByObservee($observerOnly);
         if ($summaries->isEmpty()) {
-            return collect();
+            return self::$memo[$memoKey] = collect();
         }
 
-        $query = User::query()
+        $users = User::query()
             ->whereIn('id', $summaries->keys()->all())
-            ->with(['avatarMedia', 'assignedDepartments']);
+            ->with(['avatarMedia', 'assignedDepartments'])
+            ->get()
+            ->keyBy('id');
 
-        if ($scopeUsers !== null) {
-            $scopeUsers($query);
-        }
-
-        $users = $query->get()->keyBy('id');
-
-        $rows = $summaries
+        return self::$memo[$memoKey] = $summaries
             ->map(function ($row) use ($users) {
                 $user = $users->get((int) $row->observee_id);
-                if ($user === null) {
-                    return null;
-                }
 
-                return [
+                return $user === null ? null : [
                     'user' => $user,
                     'avg_score' => (float) $row->avg_score,
                     'observation_count' => (int) $row->observation_count,
@@ -72,8 +117,20 @@ final class ObservationAnalytics
             ->filter()
             ->sortByDesc(fn (array $r) => $r['avg_score'])
             ->values();
+    }
 
-        return $rows->values()->map(function (array $row, int $idx) {
+    /**
+     * @param  (callable(User): bool)|null  $keep
+     */
+    public static function rankedUsers(?callable $keep = null, ?int $observerOnly = null): Collection
+    {
+        $rows = self::rankingBoard($observerOnly);
+
+        if ($keep !== null) {
+            $rows = $rows->filter(fn (array $r) => $keep($r['user']))->values();
+        }
+
+        return $rows->map(function (array $row, int $idx) {
             $row['rank'] = $idx + 1;
 
             return $row;
@@ -82,39 +139,29 @@ final class ObservationAnalytics
 
     public static function rankedSectionHeads(?int $observerOnly = null): Collection
     {
-        return self::rankedUsers(
-            fn (Builder $q) => $q->where('role', UserRole::SectionHead),
-            $observerOnly
-        );
+        return self::rankedUsers(fn (User $u) => $u->isSectionHead(), $observerOnly);
     }
 
     public static function rankedFaculty(?int $observerOnly = null): Collection
     {
-        return self::rankedUsers(
-            fn (Builder $q) => $q->where('role', UserRole::Faculty),
-            $observerOnly
-        );
+        return self::rankedUsers(fn (User $u) => $u->isFaculty(), $observerOnly);
     }
 
     public static function rankedStaffCombined(?int $observerOnly = null): Collection
     {
-        return self::rankedUsers(
-            fn (Builder $q) => $q->whereIn('role', [UserRole::SectionHead, UserRole::Faculty]),
-            $observerOnly
-        );
+        return self::rankedUsers(fn (User $u) => $u->isSectionHead() || $u->isFaculty(), $observerOnly);
     }
 
     public static function rankedFacultyInWing(?\App\Enums\Wing $wing, ?int $observerOnly = null): Collection
     {
-        return self::rankedUsers(function (Builder $q) use ($wing) {
-            $q->where('role', UserRole::Faculty);
-            if ($wing === null) {
-                $q->whereNull('wing');
-            } else {
-                $q->where('wing', $wing);
-            }
-        }, $observerOnly);
+        return self::rankedUsers(
+            fn (User $u) => $u->isFaculty() && $u->wing === $wing,
+            $observerOnly
+        );
     }
+
+    /** Memo of normalised-key => numeric-value maps, keyed by the block's identity. */
+    private static array $normalizedBlockCache = [];
 
     private static function numericMetricFromRubricBlock(array $block, string $canonicalName): ?float
     {
@@ -122,20 +169,35 @@ final class ObservationAnalytics
             return (float) $block[$canonicalName];
         }
 
-        $want = mb_strtolower(preg_replace('/\s+/u', ' ', trim($canonicalName)));
+        $cacheKey = md5(serialize($block));
+        $normalized = self::$normalizedBlockCache[$cacheKey] ??= self::normalizeRubricBlock($block);
 
+        $want = self::normalizeMetricName($canonicalName);
+
+        return $normalized[$want] ?? null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $block
+     * @return array<string, float>
+     */
+    private static function normalizeRubricBlock(array $block): array
+    {
+        $out = [];
         foreach ($block as $rawKey => $val) {
             if (! is_numeric($val)) {
                 continue;
             }
             $key = is_string($rawKey) || is_int($rawKey) ? (string) $rawKey : '';
-            $got = mb_strtolower(preg_replace('/\s+/u', ' ', trim($key)));
-            if ($got === $want || $got === mb_strtolower($canonicalName)) {
-                return (float) $val;
-            }
+            $out[self::normalizeMetricName($key)] = (float) $val;
         }
 
-        return null;
+        return $out;
+    }
+
+    private static function normalizeMetricName(string $name): string
+    {
+        return mb_strtolower(preg_replace('/\s+/u', ' ', trim($name)) ?? trim($name));
     }
 
     /**
@@ -284,6 +346,11 @@ final class ObservationAnalytics
 
     public static function averagedSessionMetrics(iterable $observations): array
     {
+        $signature = self::observationsSignature($observations);
+        if ($signature !== null && isset(self::$memo[$signature])) {
+            return self::$memo[$signature];
+        }
+
         $quantSums = [];
         $quantN = [];
         $qualSums = [];
@@ -340,7 +407,36 @@ final class ObservationAnalytics
             $qualitative[$metricName] = round($sum / $n, 2);
         }
 
-        return ['quantitative' => $quantitative, 'qualitative' => $qualitative];
+        $result = ['quantitative' => $quantitative, 'qualitative' => $qualitative];
+
+        if ($signature !== null) {
+            self::$memo[$signature] = $result;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Cheap identity for a set of observations: null when we cannot memo safely
+     * (e.g. a lazy generator we must not exhaust).
+     */
+    private static function observationsSignature(iterable $observations): ?string
+    {
+        if (! is_array($observations) && ! $observations instanceof Collection) {
+            return null;
+        }
+
+        $parts = [];
+        foreach ($observations as $observation) {
+            if (! $observation instanceof Observation || $observation->getKey() === null) {
+                return null;
+            }
+            $parts[] = $observation->getKey().'@'.optional($observation->updated_at)->getTimestamp();
+        }
+
+        sort($parts);
+
+        return 'metrics:'.md5(implode('|', $parts));
     }
 
     /**
@@ -459,139 +555,42 @@ final class ObservationAnalytics
         return round($sum / $n, 1);
     }
 
+    private static function ratingToPercent(?float $avgRating): ?float
+    {
+        return $avgRating === null ? null : round(($avgRating / 5) * 100, 1);
+    }
+
     public static function kpiQuantitativeCardsFromObservations(iterable $observations): array
     {
-        $collection = self::sortedObservationCollection($observations);
-        $quant = self::averagedSessionMetrics($collection)['quantitative'];
-
-        $ratingToPct = function (?float $avgRating): ?float {
-            if ($avgRating === null) {
-                return null;
-            }
-
-            return round(($avgRating / 5) * 100, 1);
-        };
-
-        $cards = [];
-        foreach (self::QUANT_METRICS as $name) {
-            $cards[] = [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => $name,
-                'display' => self::formatPct($ratingToPct($quant[$name] ?? null)),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', $name)),
-            ];
-        }
-
-        return $cards;
+        return self::kpiMetricCards($observations, 'quantitative', 'Quantitative', self::QUANT_METRICS);
     }
 
     public static function kpiQualitativeCardsFromObservations(iterable $observations): array
     {
+        return self::kpiMetricCards($observations, 'qualitative', 'Qualitative', self::QUAL_KPI_METRICS);
+    }
+
+    /**
+     * @param  list<string>  $metricNames
+     * @return list<array<string, mixed>>
+     */
+    private static function kpiMetricCards(iterable $observations, string $bucket, string $label, array $metricNames): array
+    {
         $collection = self::sortedObservationCollection($observations);
-        $qual = self::averagedSessionMetrics($collection)['qualitative'];
-
-        $ratingToPct = function (?float $avgRating): ?float {
-            if ($avgRating === null) {
-                return null;
-            }
-
-            return round(($avgRating / 5) * 100, 1);
-        };
+        $averages = self::averagedSessionMetrics($collection)[$bucket];
 
         $cards = [];
-        foreach (self::QUAL_KPI_METRICS as $name) {
+        foreach ($metricNames as $name) {
             $cards[] = [
-                'category' => 'qualitative',
-                'category_label' => 'Qualitative',
+                'category' => $bucket,
+                'category_label' => $label,
                 'metric_name' => $name,
-                'display' => self::formatPct($ratingToPct($qual[$name] ?? null)),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'qualitative', $name)),
+                'display' => self::formatPct(self::ratingToPercent($averages[$name] ?? null)),
+                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, $bucket, $name)),
             ];
         }
 
         return $cards;
-    }
-
-    public static function kpiCardsFromObservations(iterable $observations): array
-    {
-        $collection = self::sortedObservationCollection($observations);
-        $metrics = self::averagedSessionMetrics($collection);
-        $quant = $metrics['quantitative'];
-        $qual = $metrics['qualitative'];
-
-        $overallAvg = $collection->filter(fn (Observation $o) => $o->aggregate_percent !== null)->avg('aggregate_percent');
-        $overallPct = $overallAvg !== null ? round((float) $overallAvg, 1) : null;
-
-        $ratingToPct = function (?float $avgRating): ?float {
-            if ($avgRating === null) {
-                return null;
-            }
-
-            return round(($avgRating / 5) * 100, 1);
-        };
-
-        $pickQ = fn (string $name) => $ratingToPct($quant[$name] ?? null);
-        $pickL = fn (string $name) => $ratingToPct($qual[$name] ?? null);
-
-        return [
-            [
-                'category' => 'overall',
-                'category_label' => 'Summary',
-                'metric_name' => 'Overall observation score',
-                'display' => $overallPct !== null ? $overallPct.'%' : '—',
-                ...self::sparkPathsForCard(self::sparklineAggregatePaths($collection)),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Student Achievement',
-                'display' => self::formatPct($pickQ('Student Achievement')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Student Achievement')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Lesson Planning',
-                'display' => self::formatPct($pickQ('Lesson Planning')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Lesson Planning')),
-            ],
-            [
-                'category' => 'qualitative',
-                'category_label' => 'Qualitative',
-                'metric_name' => 'Student-Centricity',
-                'display' => self::formatPct($pickL('Student-Centricity')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'qualitative', 'Student-Centricity')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Attendance',
-                'display' => self::formatPct($pickQ('Attendance')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Attendance')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Assessment Quality',
-                'display' => self::formatPct($pickQ('Assessment Quality')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Assessment Quality')),
-            ],
-            [
-                'category' => 'quantitative',
-                'category_label' => 'Quantitative',
-                'metric_name' => 'Student Progress',
-                'display' => self::formatPct($pickQ('Student Progress')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'quantitative', 'Student Progress')),
-            ],
-            [
-                'category' => 'qualitative',
-                'category_label' => 'Qualitative',
-                'metric_name' => 'Innovation',
-                'display' => self::formatPct($pickL('Innovation')),
-                ...self::sparkPathsForCard(self::sparklineMetricPaths($collection, 'qualitative', 'Innovation')),
-            ],
-        ];
     }
 
     private static function sortedObservationCollection(iterable $observations): Collection

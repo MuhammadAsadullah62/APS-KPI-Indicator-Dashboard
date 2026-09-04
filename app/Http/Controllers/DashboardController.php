@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\MediaType;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreObservationRequest;
 use App\Http\Requests\UpdateObservationRequest;
-use App\Models\Media;
 use App\Models\Observation;
 use App\Models\User;
+use App\Support\AvatarService;
 use App\Support\ObservationAnalytics;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -215,17 +214,14 @@ class DashboardController extends Controller
             ->get();
     }
 
-    public function adminPanel()
+    public function adminPanel(): View
     {
-        abort_unless(auth()->user()?->isAdmin() || auth()->user()?->isPrincipal(), 403);
-
         return view('dashboard.admin-panel');
     }
 
     public function systemSettings(): View
     {
         $user = auth()->user();
-        abort_unless($user?->canAccessSystemSettings(), 403);
 
         if ($user->isFaculty()) {
             return view('dashboard.system-settings', [
@@ -303,29 +299,9 @@ class DashboardController extends Controller
             'avatar' => ['required', 'image', 'max:4096'],
         ]);
 
-        $user = $request->user();
-        abort_unless($user?->isFaculty(), 403);
-
-        $this->syncAvatarForUser($user, $request->file('avatar'));
+        AvatarService::replaceFor($request->user(), $request->file('avatar'));
 
         return redirect()->route('systemsettings')->with('status', 'Profile photo updated.');
-    }
-
-    private function syncAvatarForUser(User $user, \Illuminate\Http\UploadedFile $file): void
-    {
-        $user->mediaItems()->where('collection_name', 'avatar')->get()->each(fn (Media $m) => $m->deleteWithFile());
-
-        $path = $file->store('avatars', 'public');
-
-        $user->mediaItems()->create([
-            'collection_name' => 'avatar',
-            'disk' => 'public',
-            'path' => $path,
-            'original_filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize() ?: null,
-            'type' => MediaType::Image,
-        ]);
     }
 
     public function observations(Request $request): View

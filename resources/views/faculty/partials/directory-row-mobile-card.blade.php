@@ -1,11 +1,9 @@
 @php($faDeptLine = $row->departmentsLabelForDisplay())
 <article class="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
     <div class="flex min-w-0 gap-3">
-        @if($row->avatarUrl())
-            <img src="{{ $row->avatarUrl() }}" alt="" class="h-12 w-12 shrink-0 rounded-xl border border-slate-100 object-cover shadow-sm">
-        @else
-            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-500 text-base font-black text-white shadow-sm">{{ $row->initials() }}</div>
-        @endif
+        <x-avatar :user="$row" box="h-12 w-12 rounded-xl" :px="48"
+            img-class="shrink-0 border border-slate-100 shadow-sm"
+            fallback-class="shrink-0 bg-emerald-500 text-white text-base shadow-sm" />
         <div class="min-w-0 flex-1">
             <p class="font-black leading-tight text-slate-900 [overflow-wrap:anywhere]">{{ $row->name }}</p>
             <p class="mt-1 text-[10px] font-bold uppercase text-slate-400">{{ $row->employee_id }}</p>
@@ -22,7 +20,7 @@
             <p class="text-slate-400">—</p>
         @endif
     </div>
-    @if(auth()->user()->isAdmin() || auth()->user()->isPrincipal() || auth()->user()->isSectionHead())
+    @can('faculty.manage')
         <div class="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3">
             <button type="button" onclick="openFacultyView(@js(['name' => $row->name,'employee_id' => $row->employee_id,'email' => $row->email,'departments_display' => $row->departmentsLabelForDisplay(),'wing_label' => $row->wing?->label(),'avatar' => $row->avatarUrl(),'initials' => $row->initials()]))" class="inline-flex min-w-[5rem] flex-1 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 py-2.5 text-[10px] font-black uppercase tracking-widest text-slate-600 active:bg-slate-100 sm:py-2">
                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
@@ -39,5 +37,5 @@
         </div>
     @else
         <p class="mt-3 border-t border-slate-100 pt-3 text-center text-[10px] font-bold uppercase text-slate-300">View only</p>
-    @endif
+    @endcan
 </article>

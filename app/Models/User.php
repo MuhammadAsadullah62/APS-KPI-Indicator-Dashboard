@@ -14,10 +14,35 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
+
+    /**
+     * Keep the Spatie role in lock-step with the `role` enum column, which
+     * stays the single "primary role" the UI and factories depend on.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (User $user): void {
+            if (! $user->wasRecentlyCreated && ! $user->wasChanged('role')) {
+                return;
+            }
+
+            $value = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
+            if ($value === '' || $user->roles->pluck('name')->all() === [$value]) {
+                return;
+            }
+
+            try {
+                $user->syncRoles([$value]);
+            } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
+                // Roles not seeded yet (e.g. a bare test DB) — nothing to sync.
+            }
+        });
+    }
 
     protected $fillable = [
         'name',
@@ -108,14 +133,6 @@ class User extends Authenticatable
 
     public function canOpenObservationsPortalForObservee(User $observee): bool
     {
-        if ($this->isFaculty()) {
-            return false;
-        }
-
-        if ($this->isAdmin() || $this->isPrincipal()) {
-            return $observee->isSectionHead() || $observee->isFaculty();
-        }
-
         return $this->canObserveUser($observee);
     }
 
@@ -168,7 +185,7 @@ class User extends Authenticatable
 
     public function canAccessQuantQualObservationPages(): bool
     {
-        return ! $this->isPrincipal() && ! $this->isAdmin();
+        return $this->can('metricpages.view');
     }
 
     public function departmentsLabelForDisplay(): string
@@ -199,27 +216,23 @@ class User extends Authenticatable
 
     public function canAccessSystemSettings(): bool
     {
-        return $this->isAdmin()
-            || $this->isPrincipal()
-            || $this->isSectionHead()
-            || $this->isFaculty();
+        return $this->can('settings.view');
     }
 
     public function canViewSystemSettingsOverview(): bool
     {
-        return $this->isAdmin() || $this->isPrincipal();
+        return $this->can('settings.overview');
     }
 
     public function canAccessObservations(): bool
     {
-        return $this->isAdmin()
-            || $this->isPrincipal()
-            || ($this->isSectionHead() && $this->wing !== null);
+        return $this->can('observations.view')
+            && (! $this->isSectionHead() || $this->wing !== null);
     }
 
     public function canObserveUser(User $observee): bool
     {
-        if ($this->isFaculty()) {
+        if (! $this->can('observations.record')) {
             return false;
         }
 
