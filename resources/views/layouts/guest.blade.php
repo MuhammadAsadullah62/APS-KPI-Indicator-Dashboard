@@ -8,6 +8,7 @@
     @stack('styles')
 </head>
 <body class="bg-slate-100 min-h-screen flex items-center justify-center p-6">
+    <x-maintenance-banner />
     @yield('content')
     @stack('scripts')
 </body>
