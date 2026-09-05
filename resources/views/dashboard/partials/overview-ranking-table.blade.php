@@ -1,6 +1,9 @@
 @php
+    use App\Enums\StaffStatusEnum;
     $rows = $rows ?? collect();
     $viewer = $viewer ?? auth()->user();
+    $showStatusColumn = (bool) ($showStatusColumn ?? false);
+    $colspan = $showStatusColumn ? 9 : 8;
 @endphp
 <div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
     <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
@@ -16,12 +19,20 @@
                     <th class="px-8 py-4">Wing</th>
                     <th class="px-8 py-4">Dept.</th>
                     <th class="px-8 py-4 text-right">Avg. score</th>
+                    @if ($showStatusColumn)
+                        <th class="px-8 py-4">Status</th>
+                    @endif
                     <th class="px-8 py-4 text-right">Visits</th>
                     <th class="px-8 py-4 text-right">Observations</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-50">
                 @forelse ($rows as $row)
+                    @php
+                        $rowStatus = $showStatusColumn
+                            ? StaffStatusEnum::fromAveragePercent(isset($row['avg_score']) ? (float) $row['avg_score'] : null)
+                            : null;
+                    @endphp
                     <tr class="group hover:bg-emerald-50/30 transition-colors">
                         <td class="px-8 py-5">
                             <div class="w-9 h-9 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 font-black text-xs border border-amber-200">#{{ $row['rank'] }}</div>
@@ -47,6 +58,11 @@
                         <td class="px-8 py-5 text-right">
                             <span class="text-lg font-black text-emerald-600">{{ round($row['avg_score']) }}%</span>
                         </td>
+                        @if ($showStatusColumn)
+                            <td class="px-8 py-5">
+                                <x-dashboard.performance-status-chip :status="$rowStatus" size="sm" />
+                            </td>
+                        @endif
                         <td class="px-8 py-5 text-right text-sm font-bold text-slate-600">{{ (int) $row['observation_count'] }}</td>
                         <td class="px-8 py-5 text-right">
                             @if ($viewer->canOpenObservationsPortalForObservee($row['user']))
@@ -62,7 +78,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="8" class="px-8 py-12 text-center text-slate-400 font-semibold">No observation data yet.</td>
+                        <td colspan="{{ $colspan }}" class="px-8 py-12 text-center text-slate-400 font-semibold">No observation data yet.</td>
                     </tr>
                 @endforelse
             </tbody>

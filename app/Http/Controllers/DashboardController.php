@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StaffStatusEnum;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreObservationRequest;
@@ -70,10 +71,16 @@ class DashboardController extends Controller
             ->with(['observationSessions.scores', 'observer'])
             ->orderByDesc('created_at')
             ->get();
-        $observerMetrics = ObservationAnalytics::averagedSessionMetrics($received);
+        $metrics = ObservationAnalytics::averagedSessionMetrics($received);
         $rubricAggregatedSessions = ObservationAnalytics::totalSessionsInObservations($received);
         $kpiQuantAveragePercent = ObservationAnalytics::averageQuantPercent($received);
         $kpiQualAveragePercent = ObservationAnalytics::averageQualPercent($received);
+
+        // Same value as ranking table “Avg. score” (combined aggregate across visits).
+        $staffRankRow = $rankStaff->firstWhere(fn (array $r) => $r['user']->id === $user->id);
+        $rankingAvgScore = isset($staffRankRow['avg_score'])
+            ? (float) $staffRankRow['avg_score']
+            : ObservationAnalytics::averageAggregatePercent($received);
 
         return [
             'overviewVariant' => 'section_head',
@@ -83,13 +90,11 @@ class DashboardController extends Controller
             'topStaff' => $rankStaff->first(),
             'topSectionHead' => $rankSectionHeads->first(),
             'topWingTeacher' => $rankFacultyWing->first(),
-            'observerMetrics' => $observerMetrics,
+            'metrics' => $metrics,
             'rubricAggregatedSessions' => $rubricAggregatedSessions,
             'kpiQuantAveragePercent' => $kpiQuantAveragePercent,
             'kpiQualAveragePercent' => $kpiQualAveragePercent,
-            'kpiQuantCards' => ObservationAnalytics::kpiQuantitativeCardsFromObservations($received),
-            'kpiQualCards' => ObservationAnalytics::kpiQualitativeCardsFromObservations($received),
-            'kpiObservationCount' => $received->count(),
+            'staffStatus' => StaffStatusEnum::fromAveragePercent($rankingAvgScore),
             'observationRemarks' => ObservationAnalytics::observeeDashboardRemarks($received),
         ];
     }
@@ -126,20 +131,26 @@ class DashboardController extends Controller
             ? ObservationAnalytics::rankedFacultyInWing($user->wing)->first()
             : null;
 
-        $observeeMetrics = ObservationAnalytics::averagedSessionMetrics($received);
+        $metrics = ObservationAnalytics::averagedSessionMetrics($received);
         $rubricAggregatedSessions = ObservationAnalytics::totalSessionsInObservations($received);
         $observationOverallAveragePercent = ObservationAnalytics::averageAggregatePercent($received);
+        // Prefer ranking “Avg. score” so status matches the leaderboard column exactly.
+        $rankingAvgScore = isset($staffRankRow['avg_score'])
+            ? (float) $staffRankRow['avg_score']
+            : ($observationOverallAveragePercent ?? ($summaryRow !== null ? (float) $summaryRow->avg_score : null));
+        $avgAggregate = $rankingAvgScore;
         $kpiQuantAveragePercent = ObservationAnalytics::averageQuantPercent($received);
         $kpiQualAveragePercent = ObservationAnalytics::averageQualPercent($received);
 
         return [
             'overviewVariant' => 'faculty',
-            'avgAggregate' => $observationOverallAveragePercent ?? ($summaryRow !== null ? (float) $summaryRow->avg_score : null),
-            'observeeMetrics' => $observeeMetrics,
+            'avgAggregate' => $avgAggregate,
+            'metrics' => $metrics,
             'rubricAggregatedSessions' => $rubricAggregatedSessions,
             'observationOverallAveragePercent' => $observationOverallAveragePercent,
             'kpiQuantAveragePercent' => $kpiQuantAveragePercent,
             'kpiQualAveragePercent' => $kpiQualAveragePercent,
+            'staffStatus' => StaffStatusEnum::fromAveragePercent($rankingAvgScore),
             'rankStaff' => $rankStaff,
             'rankSectionHeads' => $rankSectionHeads,
             'topSectionHead' => $rankSectionHeads->first(),

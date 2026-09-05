@@ -7,6 +7,8 @@
     'showDateRange' => true,
     'padding' => 'px-4 py-4 sm:px-8 sm:py-6',
     'actions' => null,
+    'staffStatus' => null,
+    'showStaffStatus' => false,
 ])
 @php
     $resolvedDateChip = $dateRange ?? now()->startOfMonth()->format('M j') . ' – ' . now()->endOfMonth()->format('M j, Y');
@@ -18,7 +20,10 @@
                 <x-dashboard.mobile-menu-open-button />
                 <h2 class="min-w-0 flex-1 truncate text-xl font-black tracking-tight text-slate-800 sm:text-2xl">{{ $title }}</h2>
             </div>
-            <div class="flex flex-shrink-0 items-center justify-end gap-3 sm:gap-6">
+            <div class="flex flex-shrink-0 items-center justify-end gap-2 sm:gap-4 md:gap-5">
+                @if($showStaffStatus)
+                    <x-dashboard.performance-status-chip :status="$staffStatus" class="shrink-0" />
+                @endif
                 @if($showDateRange)
                     <div class="hidden md:flex items-center gap-3 px-4 py-2 border border-slate-200 rounded-xl bg-slate-50 text-slate-600 font-bold text-xs select-none">
                         <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>

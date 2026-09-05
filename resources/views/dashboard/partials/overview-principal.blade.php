@@ -1,6 +1,10 @@
 @php
+    use App\Enums\StaffStatusEnum;
     use App\Enums\Wing;
     $viewer = auth()->user();
+    $topStaffStatus = isset($topStaff['avg_score'])
+        ? StaffStatusEnum::fromAveragePercent((float) $topStaff['avg_score'])
+        : null;
 @endphp
 
 @if ($topStaff ?? null)
@@ -18,6 +22,7 @@
                 <div class="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                     <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-white/90 ring-1 ring-slate-200 text-sm font-black text-emerald-700 shadow-sm">#{{ $topStaff['rank'] }} overall</span>
                     <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-slate-900 text-white text-sm font-black">{{ round($topStaff['avg_score']) }}% avg.</span>
+                    <x-dashboard.performance-status-chip :status="$topStaffStatus" size="pill" />
                     <span class="text-xs font-bold text-slate-500">{{ (int) $topStaff['observation_count'] }} {{ (int) $topStaff['observation_count'] === 1 ? 'visit' : 'visits' }}</span>
                 </div>
                 <p class="mt-5 text-sm font-semibold text-slate-500 max-w-xl lg:mx-0 mx-auto">Principal overview is based on institutional rankings only — observation metrics appear on section head and teacher dashboards.</p>
@@ -41,18 +46,21 @@
         'title' => 'Overall staff rankings',
         'rows' => $rankStaff ?? collect(),
         'viewer' => $viewer,
+        'showStatusColumn' => true,
     ])
 
     @include('dashboard.partials.overview-ranking-table', [
         'title' => 'Section head rankings',
         'rows' => $rankSectionHeads ?? collect(),
         'viewer' => $viewer,
+        'showStatusColumn' => true,
     ])
 
     @include('dashboard.partials.overview-ranking-table', [
         'title' => 'Teacher rankings (all wings)',
         'rows' => $rankFaculty ?? collect(),
         'viewer' => $viewer,
+        'showStatusColumn' => true,
     ])
 
     @foreach (Wing::cases() as $wing)
@@ -61,6 +69,7 @@
             'title' => 'Teachers · '.$wing->label(),
             'rows' => $wingRows,
             'viewer' => $viewer,
+            'showStatusColumn' => true,
         ])
     @endforeach
 </div>
