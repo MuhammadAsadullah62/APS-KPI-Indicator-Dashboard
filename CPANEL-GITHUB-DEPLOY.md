@@ -137,17 +137,12 @@ first — move anything real into `kpi/storage/app/`.
 
 ### A8. First‑run commands
 
-cPanel **Terminal**, in the app dir:
-```bash
-cd /home/kpidashb/kpi
-php artisan storage:link
-php artisan migrate --force
-php artisan db:seed --class=RolePermissionSeeder --force   # RBAC backfill, one time
-php artisan optimize:clear
-php artisan optimize
-php artisan permission:cache-reset
-php artisan up
+Use a **one-shot Cron Job** (no Terminal needed) — see appendix **N4**:
 ```
+/bin/bash /home/kpidashb/kpi/deploy.sh > /home/kpidashb/deploy.log 2>&1
+```
+That runs `migrate --force` (never `migrate:fresh`), seeds RBAC, links storage,
+and rebuilds caches. Check `deploy.log`, then delete the one-shot cron.
 
 ### A9. Verify
 
@@ -268,23 +263,34 @@ subdirectories** → OK. Repeat for `kpi/bootstrap/cache`.
 
 ### N4. Run the setup commands via one Cron Job
 
+The repo ships [`deploy.sh`](deploy.sh) — safe deploy script that **never** runs
+`migrate:fresh` / `db:wipe`. It only `git pull`s, `migrate --force`s (backfills
+then drops legacy columns), reseeds RBAC permissions, and refreshes caches.
+
 cPanel → **Cron Jobs** → *Add New Cron Job*:
 
 - **Common Settings:** "Once Per Minute" is fine (you'll delete it right after), or
   set Minute to ~3 minutes ahead and the rest to `*`.
 - **Command:**
   ```
-  cd /home/kpidashb/kpi && { echo "=== $(date) ==="; /usr/local/bin/php -v; /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader --no-interaction; /usr/local/bin/php artisan storage:link; /usr/local/bin/php artisan migrate --force; /usr/local/bin/php artisan db:seed --class=RolePermissionSeeder --force; /usr/local/bin/php artisan optimize:clear; /usr/local/bin/php artisan optimize; /usr/local/bin/php artisan permission:cache-reset; /usr/local/bin/php artisan about; } > /home/kpidashb/deploy.log 2>&1
+  /bin/bash /home/kpidashb/kpi/deploy.sh > /home/kpidashb/deploy.log 2>&1
   ```
 - Save. Wait for the time to pass (or ~90s for once-per-minute).
 - Open **`/home/kpidashb/deploy.log`** in File Manager → *View*. Check each step
   succeeded (look for `Nothing to migrate` or a list of `DONE` migrations, and
-  `Configuration cached`, `Routes cached`).
-- **Delete the cron job.**
+  `deploy OK`).
+- **Delete the one-shot cron job** (keep the permanent N7 cron if you use it).
 
-If the log says `composer: command not found`, remove that one segment (your
-uploaded `vendor/` covers it). If `php` isn't found at `/usr/local/bin/php`, check
-cPanel → *Select PHP Version* for the real path, or try plain `php`.
+If the log says `composer: command not found` / composer skipped, your uploaded
+`vendor/` is used instead. If `php` isn't found at `/usr/local/bin/php`, edit the
+top of `deploy.sh` (`PHP=…`) or set it in the cron:
+
+```
+PHP=/opt/cpanel/ea-php83/root/usr/bin/php /bin/bash /home/kpidashb/kpi/deploy.sh > /home/kpidashb/deploy.log 2>&1
+```
+
+**First time only:** File Manager → `kpi/deploy.sh` → *Permissions* → enable
+**Execute** (or `755`).
 
 ### N5. Point the web root at `kpi/public`
 
@@ -307,14 +313,32 @@ If that field is read-only, do it with a one-off cron:
 
 ### N7. Ongoing updates without shell (auto-pull cron)
 
-Add a **permanent** Cron Job, every 10 minutes:
-```
-cd /home/kpidashb/kpi && /usr/bin/git pull --ff-only origin main >> /home/kpidashb/autodeploy.log 2>&1 && /usr/local/bin/php artisan migrate --force >> /home/kpidashb/autodeploy.log 2>&1 && /usr/local/bin/php artisan optimize:clear >> /home/kpidashb/autodeploy.log 2>&1 && /usr/local/bin/php artisan optimize >> /home/kpidashb/autodeploy.log 2>&1 && /usr/local/bin/php artisan permission:cache-reset >> /home/kpidashb/autodeploy.log 2>&1
-```
-Now a push to `main` goes live within 10 minutes. Caveats:
+After you **merge this branch into `main`**, add a **permanent** Cron Job so the
+server picks up `main` without SSH/Terminal.
+
+cPanel → **Cron Jobs** → *Add New Cron Job*:
+
+| Field | Value |
+|---|---|
+| Common Settings | **Every 10 minutes** (`*/10 * * * *`) |
+| Command | `/bin/bash /home/kpidashb/kpi/deploy.sh >> /home/kpidashb/autodeploy.log 2>&1` |
+
+What happens after you merge to `main`:
+
+1. Cron runs `deploy.sh` within ~10 minutes.
+2. `git pull --ff-only origin main` brings the new code (including the backfill
+   migration).
+3. `php artisan migrate --force` **backfills** departments → `user_departments`
+   and roles → Spatie, **then** drops legacy columns. Existing users /
+   observations / avatars are not wiped.
+4. `RolePermissionSeeder` refreshes the permission matrix (idempotent).
+5. Caches are rebuilt. Log: `/home/kpidashb/autodeploy.log`.
+
+Caveats:
 - **Front-end changes** (JS/CSS) still need `npm run build` on your PC + upload of
   `public/build/` — the server has no Node.
-- **New Composer packages** need `composer install` — add it to the cron command,
-  or run the N4 cron once after such a change.
-- Once the host enables shell access, delete this cron and switch to the cleaner
-  **GitHub Actions** flow (Part B, Option 1).
+- **Never** put `migrate:fresh` in cron — `deploy.sh` forbids it on purpose.
+- Before the first auto-deploy of this branch: phpMyAdmin → *Export* a DB dump
+  (belt-and-suspenders). The migration is additive/backfill-then-drop, not wipe.
+- Once the host enables shell access, you can keep this cron or switch to
+  **GitHub Actions** (Part B, Option 1).
