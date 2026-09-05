@@ -41,8 +41,8 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Institutional email <span class="text-red-500">*</span></label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Institutional password <span class="text-red-500">*</span></label><input type="password" name="password" required autocomplete="new-password" minlength="8" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Email <span class="text-red-500">*</span></label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Password <span class="text-red-500">*</span></label><input type="password" name="password" required autocomplete="new-password" minlength="8" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Title (optional)</label>
@@ -125,7 +125,7 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Institutional email <span class="text-red-500">*</span></label><input type="email" id="edit_sh_email" name="email" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Email <span class="text-red-500">*</span></label><input type="email" id="edit_sh_email" name="email" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
                 <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Change Password</label><input type="password" id="edit_sh_password" name="password" placeholder="Leave blank to keep same" autocomplete="new-password" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
             </div>
             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Title (optional)</label><input type="text" id="edit_sh_title" name="title" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>

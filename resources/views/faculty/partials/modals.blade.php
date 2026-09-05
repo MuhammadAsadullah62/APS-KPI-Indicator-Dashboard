@@ -67,8 +67,8 @@
                     <p class="text-[10px] text-slate-400 font-semibold mt-2">Auto-generated when you save</p>
                 </div>
                 @endif
-                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Institutional email <span class="text-red-500">*</span></label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Institutional password <span class="text-red-500">*</span></label><input type="password" name="password" required autocomplete="new-password" minlength="8" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Email <span class="text-red-500">*</span></label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Password <span class="text-red-500">*</span></label><input type="password" name="password" required autocomplete="new-password" minlength="8" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Title (optional)</label>
@@ -93,7 +93,7 @@
     :fields="[
         ['label' => 'Full Name', 'id' => 'viewFaName'],
         ['label' => 'Employee ID', 'id' => 'viewFaEmp'],
-        ['label' => 'Institutional Email', 'id' => 'viewFaEmail', 'full' => true, 'email' => true],
+        ['label' => 'Email', 'id' => 'viewFaEmail', 'full' => true, 'email' => true],
         ['label' => 'Departments & wing', 'id' => 'viewFaDept', 'full' => true],
     ]" />
 
@@ -161,7 +161,7 @@
                 @endif
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Institutional email <span class="text-red-500">*</span></label><input type="email" id="edit_fa_email" name="email" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Email <span class="text-red-500">*</span></label><input type="email" id="edit_fa_email" name="email" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none focus:border-aps-green"></div>
                 <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Modify Password</label><input type="password" id="edit_fa_password" name="password" placeholder="Leave empty to remain unchanged" autocomplete="new-password" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none focus:border-aps-green"></div>
             </div>
             <div><label class="text-[10px] font-black text-slate-400 uppercase mb-2 block">Title (optional)</label><input type="text" id="edit_fa_title" name="title" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none focus:border-aps-green"></div>
