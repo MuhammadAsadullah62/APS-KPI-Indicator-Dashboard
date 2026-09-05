@@ -7,9 +7,9 @@
     /** @var \App\Enums\StaffStatusEnum|null $status */
 
     $sizeClasses = match ($size) {
-        'sm' => 'gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest',
-        'pill' => 'gap-2 px-4 py-1.5 rounded-full text-sm font-black',
-        default => 'gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-widest',
+        'sm' => 'gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider whitespace-nowrap shrink-0',
+        'pill' => 'gap-2 px-4 py-1.5 rounded-full text-sm font-black whitespace-nowrap shrink-0',
+        default => 'gap-2 px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap shrink-0',
     };
 
     $dotSize = $size === 'sm' ? 'h-1.5 w-1.5' : 'h-2 w-2';

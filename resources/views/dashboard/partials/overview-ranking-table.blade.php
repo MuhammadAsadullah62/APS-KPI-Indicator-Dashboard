@@ -59,7 +59,7 @@
                             <span class="text-lg font-black text-emerald-600">{{ round($row['avg_score']) }}%</span>
                         </td>
                         @if ($showStatusColumn)
-                            <td class="px-8 py-5">
+                            <td class="px-8 py-5 whitespace-nowrap">
                                 <x-dashboard.performance-status-chip :status="$rowStatus" size="sm" />
                             </td>
                         @endif
