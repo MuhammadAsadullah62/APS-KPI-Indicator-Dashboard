@@ -4,7 +4,8 @@
 @endphp
 
 <div id="createSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="min-h-0 overflow-y-auto">
         <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50 sticky top-0 z-10">
             <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Register SectionHead</h3>
             <button type="button" onclick="toggleModal('createSecHeadModal')" class="text-slate-400"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -72,6 +73,7 @@
                 <button type="submit" class="bg-aps-green text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Create Profile</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
@@ -119,7 +121,8 @@
 </div>
 
 <div id="editSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="min-h-0 overflow-y-auto">
         <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50 sticky top-0 z-10">
             <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Update Profile</h3>
             <button type="button" onclick="toggleModal('editSecHeadModal')" class="text-slate-400"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
@@ -180,6 +183,7 @@
                 <button type="submit" class="bg-aps-green text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Save Changes</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 

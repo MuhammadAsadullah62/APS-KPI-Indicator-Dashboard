@@ -154,9 +154,18 @@ function openSecHeadEdit(data) {
     syncEditOtherDeptWrap();
     document.getElementById('edit_sh_password').value = '';
     document.getElementById('editAvatar').value = '';
-    document.getElementById('editAvatarPreview').classList.add('hidden');
-    document.getElementById('editInitials').textContent = data.name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
-    document.getElementById('editInitials').classList.remove('hidden');
+    const editAvatarPreview = document.getElementById('editAvatarPreview');
+    const editInitials = document.getElementById('editInitials');
+    if (data.avatar) {
+        editAvatarPreview.src = data.avatar;
+        editAvatarPreview.classList.remove('hidden');
+        editInitials.classList.add('hidden');
+    } else {
+        editAvatarPreview.src = '';
+        editAvatarPreview.classList.add('hidden');
+        editInitials.classList.remove('hidden');
+    }
+    editInitials.textContent = data.name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
     toggleModal('editSecHeadModal');
 }
 function openSecHeadDelete(data) {
