@@ -38,36 +38,13 @@
                 <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-800">{{ $errors->first() }}</div>
             @endif
 
-            <div class="min-w-0 overflow-hidden rounded-2xl border border-slate-200 bg-white font-semibold shadow-sm sm:rounded-[2.5rem]">
-                <div class="border-b border-slate-100 bg-slate-50/50 p-4 sm:p-6 md:p-8">
-                    <h3 class="text-lg font-black uppercase tracking-tight text-slate-800 sm:text-xl">Active Faculty Directory</h3>
-                </div>
-                @if($facultyMembers->isEmpty())
-                    <p class="px-4 py-10 text-center font-semibold text-slate-400 sm:px-6 sm:py-12">No faculty members registered yet.</p>
-                @else
-                    <div class="space-y-3 p-4 md:hidden">
-                        @foreach ($facultyMembers as $row)
-                            @include('faculty.partials.directory-row-mobile-card', ['row' => $row])
-                        @endforeach
-                    </div>
-                    <div class="hidden overflow-x-auto md:block">
-                        <table class="w-full border-collapse text-left">
-                            <thead>
-                                <tr class="bg-slate-50/30 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
-                                    <th class="px-3 py-3 sm:px-6 sm:py-4 md:px-10 md:py-5">Instructor</th>
-                                    <th class="px-3 py-3 sm:px-6 sm:py-4 md:px-10 md:py-5">Departments</th>
-                                    <th class="px-3 py-3 text-right sm:px-6 sm:py-4 md:px-10 md:py-5">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-100">
-                                @foreach ($facultyMembers as $row)
-                                    @include('faculty.partials.directory-row-table', ['row' => $row])
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                @endif
-            </div>
+            <x-directory.list
+                heading="Active Faculty Directory"
+                :rows="$facultyMembers"
+                empty="No faculty members registered yet."
+                :columns="['Instructor', 'Wing', 'Departments', 'Actions']"
+                row-view="faculty.partials.directory-row-table"
+                card-view="faculty.partials.directory-row-mobile-card" />
 @endsection
 
 @push('modals')
@@ -147,9 +124,18 @@ function openFacultyEdit(data) {
     document.getElementById('edit_fa_title').value = data.title || '';
     document.getElementById('edit_fa_password').value = '';
     document.getElementById('editFaAvatar').value = '';
-    document.getElementById('editFaAvatarPreview').classList.add('hidden');
-    document.getElementById('eInitials').textContent = data.name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
-    document.getElementById('eInitials').classList.remove('hidden');
+    var editFaAvatarPreview = document.getElementById('editFaAvatarPreview');
+    var editFaInitials = document.getElementById('eInitials');
+    if (data.avatar) {
+        editFaAvatarPreview.src = data.avatar;
+        editFaAvatarPreview.classList.remove('hidden');
+        editFaInitials.classList.add('hidden');
+    } else {
+        editFaAvatarPreview.src = '';
+        editFaAvatarPreview.classList.add('hidden');
+        editFaInitials.classList.remove('hidden');
+    }
+    editFaInitials.textContent = data.name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
     toggleModal('editFacultyModal');
 }
 function openFacultyDelete(data) {

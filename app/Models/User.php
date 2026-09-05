@@ -188,6 +188,28 @@ class User extends Authenticatable
         return $this->can('metricpages.view');
     }
 
+    /**
+     * Department labels for chip display in directory tables. "Other" is expanded
+     * to include the custom label when set.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function departmentChipLabels(): Collection
+    {
+        return collect($this->departments ?? [])->map(function ($v) {
+            if (! is_string($v)) {
+                return null;
+            }
+            if ($v === Department::Other->value) {
+                return filled($this->other_department_label)
+                    ? 'Other ('.$this->other_department_label.')'
+                    : 'Other';
+            }
+
+            return Department::tryFrom($v)?->label();
+        })->filter()->values();
+    }
+
     public function departmentsLabelForDisplay(): string
     {
         if ($this->isFaculty() || $this->isSectionHead()) {

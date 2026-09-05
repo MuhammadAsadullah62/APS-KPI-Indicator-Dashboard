@@ -114,7 +114,7 @@
                                         </div>
                                     </td>
                                     <td class="px-8 py-5 text-right">
-                                        <button type="button" onclick="openOverviewUserView(@js([
+                                        <x-directory.view-button variant="compact" handler="openOverviewUserView" :payload="[
                                             'name' => $row->name,
                                             'employee_id' => $row->employee_id,
                                             'email' => $row->email,
@@ -123,7 +123,7 @@
                                             'role_label' => $row->role->label(),
                                             'avatar' => $row->avatarUrl(),
                                             'initials' => $row->initials(),
-                                        ]))" class="p-2 text-slate-300 hover:text-aps-green hover:bg-white border border-transparent hover:border-slate-100 rounded-xl transition-all"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg></button>
+                                        ]" />
                                     </td>
                                 </tr>
                                 @empty
@@ -302,7 +302,7 @@ function openFacultyView(data) {
     document.getElementById('viewFaName').textContent = data.name;
     document.getElementById('viewFaEmp').textContent = data.employee_id;
     document.getElementById('viewFaEmail').textContent = data.email;
-    document.getElementById('viewFaDept').textContent = data.department_label ? (data.department_label + (data.wing_label ? ' (' + data.wing_label + ')' : '')) : '—';
+    document.getElementById('viewFaDept').textContent = data.departments_display && data.departments_display !== '—' ? (data.departments_display + (data.wing_label ? ' (' + data.wing_label + ')' : '')) : (data.wing_label || '—');
     const img = document.getElementById('viewFaAvatar');
     const initialsEl = document.getElementById('viewFaInitials');
     if (data.avatar) {
@@ -319,17 +319,31 @@ function openFacultyView(data) {
 function openFacultyEdit(data) {
     document.getElementById('editFacultyForm').action = data.updateUrl;
     document.getElementById('edit_fa_name').value = data.name;
-    document.getElementById('edit_fa_employee_id').value = data.employee_id;
+    document.getElementById('edit_fa_employee_id_display').textContent = data.employee_id || '—';
     document.getElementById('edit_fa_email').value = data.email;
     var wingSel = document.getElementById('edit_fa_wing');
     if (wingSel) wingSel.value = data.wing || '';
-    document.getElementById('edit_fa_department').value = data.department || '';
+    document.querySelectorAll('#editFacultyForm [name="departments[]"]').forEach(function (cb) {
+        cb.checked = Array.isArray(data.departments) && data.departments.indexOf(cb.value) !== -1;
+    });
+    var otherFa = document.getElementById('edit_faculty_other_department_label');
+    if (otherFa) otherFa.value = data.other_department_label || '';
+    syncEditFacultyOtherDeptWrap();
     document.getElementById('edit_fa_title').value = data.title || '';
     document.getElementById('edit_fa_password').value = '';
     document.getElementById('editFaAvatar').value = '';
-    document.getElementById('editFaAvatarPreview').classList.add('hidden');
-    document.getElementById('eInitials').textContent = data.name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
-    document.getElementById('eInitials').classList.remove('hidden');
+    var editFaAvatarPreview = document.getElementById('editFaAvatarPreview');
+    var editFaInitials = document.getElementById('eInitials');
+    if (data.avatar) {
+        editFaAvatarPreview.src = data.avatar;
+        editFaAvatarPreview.classList.remove('hidden');
+        editFaInitials.classList.add('hidden');
+    } else {
+        editFaAvatarPreview.src = '';
+        editFaAvatarPreview.classList.add('hidden');
+        editFaInitials.classList.remove('hidden');
+    }
+    editFaInitials.textContent = data.name.split(/\s+/).filter(Boolean).slice(0, 2).map(function (p) { return p[0]; }).join('').toUpperCase();
     toggleModal('editFacultyModal');
 }
 function openFacultyDelete(data) {

@@ -4,15 +4,16 @@
 @endphp
 
 <div id="createFacultyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6" @if(auth()->user()->isSectionHead() && auth()->user()->wing) data-sh-wing="{{ auth()->user()->wing->value }}" @endif>
-    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="min-h-0 overflow-y-auto">
         <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50 sticky top-0 z-10">
             <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase">Onboard Teacher</h3>
             <button type="button" onclick="toggleModal('createFacultyModal')" class="text-slate-400 hover:text-slate-600"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        <form action="{{ route('faculty.store') }}" method="post" enctype="multipart/form-data" class="p-10 space-y-8 overflow-y-auto max-h-[75vh] no-scrollbar">
+        <form action="{{ route('faculty.store') }}" method="post" enctype="multipart/form-data" class="p-10 space-y-8">
             @csrf
             <div class="flex justify-center">
-                <div class="relative group">
+                <div class="relative group w-32 h-32">
                     <div class="w-32 h-32 relative rounded-full shadow-lg border-4 border-white overflow-hidden bg-aps-green flex items-center justify-center text-white font-black text-5xl" id="cInitials">NEW</div>
                     <img id="cAvatarPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-full" alt="">
                     <button type="button" onclick="document.getElementById('cAvatar').click()" class="absolute right-0 -bottom-2 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center border-2 border-white shadow-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
@@ -78,59 +79,36 @@
                 <button type="submit" class="bg-aps-green text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Register Account</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
-<div id="viewFacultyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200">
-        <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50">
-            <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Instructor Overview</h3>
-            <button type="button" onclick="toggleModal('viewFacultyModal')" class="text-slate-400 hover:text-slate-600"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-        </div>
-        <div class="p-12 space-y-10">
-            <div class="flex flex-col sm:flex-row sm:items-start gap-10">
-                <div class="relative w-32 h-32 shrink-0 mx-auto sm:mx-0">
-                    <img id="viewFaAvatar" src="" alt="" class="hidden w-32 h-32 rounded-[2.5rem] object-cover shadow-xl border border-slate-100"
-                        onerror="this.onerror=null;this.classList.add('hidden');document.getElementById('viewFaInitials').classList.remove('hidden');">
-                    <div id="viewFaInitials" class="w-32 h-32 bg-emerald-500 rounded-[2.5rem] flex items-center justify-center text-white text-5xl font-black shadow-xl">?</div>
-                </div>
-                <div class="grid w-full min-w-0 sm:flex-1 grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
-                    <div class="min-w-0 sm:pr-1">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Full Name</p>
-                        <p id="viewFaName" class="text-base sm:text-lg font-black text-slate-800 mt-1 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                    <div class="min-w-0 sm:pl-1">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Employee ID</p>
-                        <p id="viewFaEmp" class="text-base sm:text-lg font-black text-slate-800 mt-1 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Institutional Email</p>
-                        <p id="viewFaEmail" class="text-sm sm:text-base font-bold text-aps-green mt-1 break-words [overflow-wrap:anywhere] leading-relaxed"></p>
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Departments &amp; wing</p>
-                        <p id="viewFaDept" class="text-base sm:text-lg font-black text-slate-800 mt-1 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8 pt-8 border-t border-slate-100 flex justify-end">
-                <button type="button" onclick="toggleModal('viewFacultyModal')" class="bg-slate-900 text-white px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Close Profile</button>
-            </div>
-        </div>
-    </div>
-</div>
+<x-directory.view-modal
+    id="viewFacultyModal"
+    title="Instructor Overview"
+    avatar-id="viewFaAvatar"
+    initials-id="viewFaInitials"
+    accent="bg-emerald-500"
+    close-label="Close Profile"
+    :fields="[
+        ['label' => 'Full Name', 'id' => 'viewFaName'],
+        ['label' => 'Employee ID', 'id' => 'viewFaEmp'],
+        ['label' => 'Institutional Email', 'id' => 'viewFaEmail', 'full' => true, 'email' => true],
+        ['label' => 'Departments & wing', 'id' => 'viewFaDept', 'full' => true],
+    ]" />
 
 <div id="editFacultyModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
+    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="min-h-0 overflow-y-auto">
         <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50 sticky top-0 z-10">
             <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Update Faculty Data</h3>
             <button type="button" onclick="toggleModal('editFacultyModal')" class="text-slate-400"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
-        <form id="editFacultyForm" action="" method="post" enctype="multipart/form-data" class="p-10 space-y-8 overflow-y-auto max-h-[75vh] no-scrollbar">
+        <form id="editFacultyForm" action="" method="post" enctype="multipart/form-data" class="p-10 space-y-8">
             @csrf
             @method('PUT')
             <div class="flex justify-center">
-                <div class="relative group">
+                <div class="relative group w-32 h-32">
                     <div class="w-32 h-32 relative rounded-full shadow-lg border-4 border-white overflow-hidden bg-emerald-500 flex items-center justify-center text-white font-black text-5xl" id="eInitials">?</div>
                     <img id="editFaAvatarPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-full" alt="">
                     <button type="button" onclick="document.getElementById('editFaAvatar').click()" class="absolute right-0 -bottom-2 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center border-2 border-white shadow-xl hover:bg-aps-green transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
@@ -192,6 +170,7 @@
                 <button type="submit" class="bg-aps-green text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl shadow-emerald-900/20 hover:bg-emerald-900 transition-all">Save Faculty Record</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
