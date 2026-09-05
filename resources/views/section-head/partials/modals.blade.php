@@ -3,7 +3,7 @@
     use App\Enums\Wing;
 @endphp
 
-<div id="createSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
+<div id="createSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-100 items-center justify-center p-6">
     <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
         <div class="min-h-0 overflow-y-auto">
         <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50 sticky top-0 z-10">
@@ -36,7 +36,7 @@
                 </div>
                 <div>
                     <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Employee ID</label>
-                    <div id="createSecHeadIdPreview" class="w-full px-5 py-3.5 bg-slate-100 border border-dashed border-slate-300 rounded-2xl text-sm font-mono font-bold text-slate-700 min-h-[3.25rem] flex items-center">—</div>
+                    <div id="createSecHeadIdPreview" class="w-full px-5 py-3.5 bg-slate-100 border border-dashed border-slate-300 rounded-2xl text-sm font-mono font-bold text-slate-700 min-h-13 flex items-center">—</div>
                     <p class="text-[10px] text-slate-400 font-semibold mt-2">Auto-generated when you save</p>
                 </div>
             </div>
@@ -53,7 +53,7 @@
                 <p class="text-xs text-slate-500 font-semibold mb-4">Select all departments this section head oversees.</p>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-56 overflow-y-auto pr-2">
                     @foreach (Department::cases() as $dept)
-                        <label class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/80 cursor-pointer hover:border-aps-green/40 transition-colors has-[:checked]:border-aps-green has-[:checked]:bg-emerald-50/50">
+                        <label class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/80 cursor-pointer hover:border-aps-green/40 transition-colors has-checked:border-aps-green has-checked:bg-emerald-50/50">
                             <input type="checkbox" name="departments[]" value="{{ $dept->value }}" class="rounded border-slate-300 text-aps-green focus:ring-aps-green" {{ in_array($dept->value, old('departments', []), true) ? 'checked' : '' }}>
                             <span class="text-sm font-semibold text-slate-800">{{ $dept->label() }}</span>
                         </label>
@@ -90,7 +90,7 @@
         ['label' => 'Departments', 'id' => 'viewShDepartments', 'full' => true],
     ]" />
 
-<div id="editSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
+<div id="editSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-100 items-center justify-center p-6">
     <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
         <div class="min-h-0 overflow-y-auto">
         <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50 sticky top-0 z-10">
@@ -133,7 +133,7 @@
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-3 px-1">Departments <span class="text-red-500">*</span></label>
                 <div id="editSecHeadDepartments" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-56 overflow-y-auto pr-2">
                     @foreach (Department::cases() as $dept)
-                        <label class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/80 cursor-pointer hover:border-aps-green/40 transition-colors has-[:checked]:border-aps-green has-[:checked]:bg-emerald-50/50">
+                        <label class="flex items-center gap-3 px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50/80 cursor-pointer hover:border-aps-green/40 transition-colors has-checked:border-aps-green has-checked:bg-emerald-50/50">
                             <input type="checkbox" name="departments[]" value="{{ $dept->value }}" class="edit-dept-checkbox rounded border-slate-300 text-aps-green focus:ring-aps-green">
                             <span class="text-sm font-semibold text-slate-800">{{ $dept->label() }}</span>
                         </label>
@@ -157,7 +157,7 @@
     </div>
 </div>
 
-<div id="deleteSecHeadModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[100] items-center justify-center p-6">
+<div id="deleteSecHeadModal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-100 items-center justify-center p-6">
     <div class="bg-white w-full max-w-md rounded-[3rem] shadow-2xl p-12 text-center border-4 border-red-50">
         <div class="w-20 h-20 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-6"><svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></div>
         <h3 class="text-2xl font-black text-slate-800 uppercase tracking-tight">Revoke Access?</h3>

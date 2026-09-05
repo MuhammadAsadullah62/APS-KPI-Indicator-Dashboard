@@ -20,7 +20,6 @@
             @endphp
             <div class="bg-white rounded-2xl sm:rounded-[2.5rem] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-10 mb-6 sm:mb-8 relative overflow-hidden min-w-0">
                 <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Your qualitative observation average</p>
-                <p class="text-xs sm:text-sm text-slate-500 font-semibold mb-4">Mean of all qualitative rubric metrics, 0–100% (same method as the dashboard). Green ≥85% · Amber 70–84.9% · Red &lt;70%.</p>
                 <h3 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 leading-none">{{ $lAvg !== null ? number_format($lAvg, 1) : '—' }}<span class="text-xl sm:text-2xl font-bold text-slate-400">%</span></h3>
                 <div class="mt-6 w-full h-4 rounded-full bg-slate-100 overflow-hidden">
                     @if ($lAvg !== null)

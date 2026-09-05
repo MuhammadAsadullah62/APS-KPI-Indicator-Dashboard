@@ -25,6 +25,7 @@ Route::middleware('auth')->group(function (): void {
     Route::get('/adminpanel', [DashboardController::class, 'adminPanel'])->name('adminpanel')->middleware('can:adminpanel.view');
 
     Route::get('/systemsettings', [DashboardController::class, 'systemSettings'])->name('systemsettings')->middleware('can:settings.view');
+    Route::put('/systemsettings/profile', [DashboardController::class, 'updateOwnProfile'])->name('systemsettings.profile')->middleware('can:settings.updateOwnProfile');
     Route::put('/systemsettings/avatar', [DashboardController::class, 'updateOwnAvatar'])->name('systemsettings.avatar')->middleware('can:settings.updateOwnAvatar');
 
     Route::middleware('can:sectionheads.view')->group(function (): void {

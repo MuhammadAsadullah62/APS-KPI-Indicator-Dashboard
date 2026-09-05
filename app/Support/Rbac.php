@@ -29,6 +29,7 @@ final class Rbac
         'settings.view',
         'settings.overview',       // the leadership stats + recent users panel
         'settings.updateOwnAvatar',
+        'settings.updateOwnProfile',
         // Section head directory
         'sectionheads.view',
         'sectionheads.manage',
@@ -80,6 +81,8 @@ final class Rbac
                 'reports.view',
                 'metricpages.view',
                 'settings.view',
+                'settings.updateOwnAvatar',
+                'settings.updateOwnProfile',
                 'sectionheads.view',
                 'faculty.view',
                 'faculty.manage',
@@ -93,6 +96,7 @@ final class Rbac
                 'metricpages.view',
                 'settings.view',
                 'settings.updateOwnAvatar',
+                'settings.updateOwnProfile',
             ],
         ];
     }

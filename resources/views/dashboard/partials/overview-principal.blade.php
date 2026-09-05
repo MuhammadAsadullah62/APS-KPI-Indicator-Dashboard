@@ -1,10 +1,14 @@
 @php
+    use App\Enums\StaffStatusEnum;
     use App\Enums\Wing;
     $viewer = auth()->user();
+    $topStaffStatus = isset($topStaff['avg_score'])
+        ? StaffStatusEnum::fromAveragePercent((float) $topStaff['avg_score'])
+        : null;
 @endphp
 
 @if ($topStaff ?? null)
-    <div class="mb-10 rounded-[2rem] border border-amber-100 bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/40 p-8 md:p-10 shadow-sm overflow-hidden relative">
+    <div class="mb-10 rounded-4xl border border-amber-100 bg-linear-to-br from-amber-50/90 via-white to-emerald-50/40 p-8 md:p-10 shadow-sm overflow-hidden relative">
         <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
         <div class="relative flex flex-col lg:flex-row lg:items-center gap-8">
             <div class="shrink-0 flex justify-center lg:justify-start">
@@ -18,6 +22,7 @@
                 <div class="mt-4 flex flex-wrap items-center justify-center lg:justify-start gap-3">
                     <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-white/90 ring-1 ring-slate-200 text-sm font-black text-emerald-700 shadow-sm">#{{ $topStaff['rank'] }} overall</span>
                     <span class="inline-flex items-center px-4 py-1.5 rounded-full bg-slate-900 text-white text-sm font-black">{{ round($topStaff['avg_score']) }}% avg.</span>
+                    <x-dashboard.performance-status-chip :status="$topStaffStatus" size="pill" />
                     <span class="text-xs font-bold text-slate-500">{{ (int) $topStaff['observation_count'] }} {{ (int) $topStaff['observation_count'] === 1 ? 'visit' : 'visits' }}</span>
                 </div>
                 <p class="mt-5 text-sm font-semibold text-slate-500 max-w-xl lg:mx-0 mx-auto">Principal overview is based on institutional rankings only — observation metrics appear on section head and teacher dashboards.</p>
@@ -41,18 +46,21 @@
         'title' => 'Overall staff rankings',
         'rows' => $rankStaff ?? collect(),
         'viewer' => $viewer,
+        'showStatusColumn' => true,
     ])
 
     @include('dashboard.partials.overview-ranking-table', [
         'title' => 'Section head rankings',
         'rows' => $rankSectionHeads ?? collect(),
         'viewer' => $viewer,
+        'showStatusColumn' => true,
     ])
 
     @include('dashboard.partials.overview-ranking-table', [
         'title' => 'Teacher rankings (all wings)',
         'rows' => $rankFaculty ?? collect(),
         'viewer' => $viewer,
+        'showStatusColumn' => true,
     ])
 
     @foreach (Wing::cases() as $wing)
@@ -61,6 +69,7 @@
             'title' => 'Teachers · '.$wing->label(),
             'rows' => $wingRows,
             'viewer' => $viewer,
+            'showStatusColumn' => true,
         ])
     @endforeach
 </div>
