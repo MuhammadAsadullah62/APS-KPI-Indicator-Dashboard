@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreObservationRequest;
 use App\Http\Requests\UpdateObservationRequest;
+use App\Http\Requests\UpdateOwnProfileRequest;
 use App\Models\Observation;
 use App\Models\User;
 use App\Support\AvatarService;
@@ -14,6 +15,7 @@ use App\Support\ObservationAnalytics;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\View\View;
 
 class DashboardController extends Controller
@@ -234,25 +236,13 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->isFaculty()) {
-            return view('dashboard.system-settings', [
-                'facultyProfileOnly' => true,
-                'stats' => [],
-                'recentUsers' => collect(),
-                'facultyByWing' => collect(),
-                'facultyUnassigned' => collect(),
-                'directoryReadOnly' => true,
-                'showOverview' => false,
+        if ($user->isFaculty() || $user->isSectionHead()) {
+            return view('dashboard.staff-settings', [
+                'profileUser' => $user->loadMissing('avatarMedia'),
             ]);
         }
 
-        abort_if($user->isSectionHead() && ! $user->wing, 403);
-
-        $facultyByWing = collect(Wing::cases())->mapWithKeys(function (Wing $wing) use ($user) {
-            if ($user->isSectionHead() && $wing !== $user->wing) {
-                return [$wing->value => collect()];
-            }
-
+        $facultyByWing = collect(Wing::cases())->mapWithKeys(function (Wing $wing) {
             return [
                 $wing->value => User::role(UserRole::Faculty->value)
                     ->where('wing', $wing)
@@ -262,14 +252,11 @@ class DashboardController extends Controller
             ];
         });
 
-        $facultyUnassigned = collect();
-        if ($user->isAdmin() || $user->isPrincipal()) {
-            $facultyUnassigned = User::role(UserRole::Faculty->value)
-                ->whereNull('wing')
-                ->with(['avatarMedia', 'assignedDepartments'])
-                ->orderBy('name')
-                ->get();
-        }
+        $facultyUnassigned = User::role(UserRole::Faculty->value)
+            ->whereNull('wing')
+            ->with(['avatarMedia', 'assignedDepartments'])
+            ->orderBy('name')
+            ->get();
 
         $stats = [];
         $recentUsers = collect();
@@ -287,17 +274,36 @@ class DashboardController extends Controller
                 ->get();
         }
 
-        $directoryReadOnly = $user->isSectionHead();
-
         return view('dashboard.system-settings', [
-            'facultyProfileOnly' => false,
             'stats' => $stats,
             'recentUsers' => $recentUsers,
             'facultyByWing' => $facultyByWing,
             'facultyUnassigned' => $facultyUnassigned,
-            'directoryReadOnly' => $directoryReadOnly,
+            'directoryReadOnly' => false,
             'showOverview' => $user->canViewSystemSettingsOverview(),
         ]);
+    }
+
+    public function updateOwnProfile(UpdateOwnProfileRequest $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        $data = [
+            'name' => $request->string('name')->toString(),
+            'email' => $request->string('email')->toString(),
+        ];
+
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->string('password')->toString());
+        }
+
+        $user->update($data);
+
+        if ($request->hasFile('avatar')) {
+            AvatarService::replaceFor($user, $request->file('avatar'));
+        }
+
+        return redirect()->route('systemsettings')->with('status', 'Settings saved.');
     }
 
     public function updateOwnAvatar(Request $request): RedirectResponse

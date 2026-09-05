@@ -212,6 +212,11 @@ class User extends Authenticatable
         return $this->can('settings.view');
     }
 
+    public function canUpdateOwnProfile(): bool
+    {
+        return $this->can('settings.updateOwnProfile');
+    }
+
     public function canViewSystemSettingsOverview(): bool
     {
         return $this->can('settings.overview');
@@ -243,6 +248,10 @@ class User extends Authenticatable
 
     public function canEditObservation(\App\Models\Observation $observation): bool
     {
+        if ($this->isSectionHead()) {
+            return false;
+        }
+
         if ($this->isAdmin() || $this->isPrincipal()) {
             return true;
         }

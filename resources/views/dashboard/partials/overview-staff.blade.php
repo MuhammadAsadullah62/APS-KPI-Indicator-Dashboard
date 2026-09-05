@@ -44,7 +44,7 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{{ (int) ($observationCount ?? 0) }} leadership {{ (int) ($observationCount ?? 0) === 1 ? 'visit' : 'visits' }}</p>
                 </div>
             </div>
-            <div class="flex-1 space-y-5 pt-2 lg:pt-0 lg:border-t-0 border-t border-slate-100 lg:border-l lg:pl-8 lg:border-t-0">
+            <div class="flex-1 space-y-5 pt-2 lg:pt-0 border-t border-slate-100 lg:border-l lg:pl-8 lg:border-t-0">
                 @include('dashboard.partials.overview-rank-position-bar', [
                     'title' => 'All staff (heads + teachers)',
                     'rank' => $staffRankRow['rank'] ?? null,
@@ -65,7 +65,7 @@
         </div>
     </div>
 
-    <div id="your-ranking" class="mb-10 rounded-[2rem] border border-emerald-100 bg-gradient-to-br from-emerald-50/90 to-white p-6 md:p-8 shadow-sm scroll-mt-24">
+    <div id="your-ranking" class="mb-10 rounded-4xl border border-emerald-100 bg-linear-to-br from-emerald-50/90 to-white p-6 md:p-8 shadow-sm scroll-mt-24">
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
                 <h3 class="text-lg font-black text-slate-800">Your ranking · quick view</h3>
@@ -108,7 +108,7 @@
                 'viewer' => $viewer,
             ])
         @else
-            <div class="rounded-[2rem] border border-dashed border-slate-200 bg-slate-50 px-8 py-10 text-center">
+            <div class="rounded-4xl border border-dashed border-slate-200 bg-slate-50 px-8 py-10 text-center">
                 <p class="text-sm font-semibold text-slate-500">Assign a wing on your profile to view the teacher leaderboard for your wing.</p>
             </div>
         @endif

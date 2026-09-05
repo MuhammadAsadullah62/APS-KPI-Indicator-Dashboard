@@ -8,7 +8,7 @@
 @endphp
 
 @if ($topStaff ?? null)
-    <div class="mb-10 rounded-[2rem] border border-amber-100 bg-gradient-to-br from-amber-50/90 via-white to-emerald-50/40 p-8 md:p-10 shadow-sm overflow-hidden relative">
+    <div class="mb-10 rounded-4xl border border-amber-100 bg-linear-to-br from-amber-50/90 via-white to-emerald-50/40 p-8 md:p-10 shadow-sm overflow-hidden relative">
         <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none -translate-y-1/2 translate-x-1/3"></div>
         <div class="relative flex flex-col lg:flex-row lg:items-center gap-8">
             <div class="shrink-0 flex justify-center lg:justify-start">

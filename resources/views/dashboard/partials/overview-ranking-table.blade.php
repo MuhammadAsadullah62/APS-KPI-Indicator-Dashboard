@@ -5,12 +5,12 @@
     $showStatusColumn = (bool) ($showStatusColumn ?? false);
     $colspan = $showStatusColumn ? 9 : 8;
 @endphp
-<div class="bg-white rounded-[2rem] border border-slate-200 shadow-sm overflow-hidden">
+<div class="bg-white rounded-4xl border border-slate-200 shadow-sm overflow-hidden">
     <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
         <h3 class="text-xl font-black text-slate-800">{{ $title }}</h3>
     </div>
     <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse min-w-[720px]">
+        <table class="w-full text-left border-collapse min-w-180">
             <thead>
                 <tr class="text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-slate-50/50">
                     <th class="px-8 py-4">Rank</th>
@@ -52,7 +52,7 @@
                             <span class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest">{{ $row['user']->roleLabel() }}</span>
                         </td>
                         <td class="px-8 py-5 text-sm font-bold text-slate-600">{{ $row['user']->wing?->label() ?? '—' }}</td>
-                        <td class="px-8 py-5 text-sm font-semibold text-slate-700 max-w-[14rem]">
+                        <td class="px-8 py-5 text-sm font-semibold text-slate-700 max-w-56">
                             <span class="line-clamp-3">{{ $row['user']->departmentsLabelForDisplay() }}</span>
                         </td>
                         <td class="px-8 py-5 text-right">
@@ -69,7 +69,9 @@
                                 @php($obsUrl = route('observations', ['observee' => $row['user']->id]))
                                 <div class="flex flex-wrap justify-end gap-2">
                                     <a href="{{ $obsUrl }}" class="inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">View</a>
-                                    <a href="{{ $obsUrl }}" class="inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-aps-green transition-colors">Edit</a>
+                                    @if ($viewer->isAdmin() || $viewer->isPrincipal())
+                                        <a href="{{ $obsUrl }}" class="inline-flex items-center px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest bg-slate-900 text-white hover:bg-aps-green transition-colors">Edit</a>
+                                    @endif
                                 </div>
                             @else
                                 <span class="text-[10px] font-bold text-slate-300 uppercase tracking-widest">—</span>

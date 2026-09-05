@@ -20,7 +20,7 @@
                 <x-dashboard.mobile-menu-open-button />
                 <h2 class="min-w-0 flex-1 truncate text-xl font-black tracking-tight text-slate-800 sm:text-2xl">{{ $title }}</h2>
             </div>
-            <div class="flex flex-shrink-0 items-center justify-end gap-2 sm:gap-4 md:gap-5">
+            <div class="flex shrink-0 items-center justify-end gap-2 sm:gap-4 md:gap-5">
                 @if($showStaffStatus)
                     <x-dashboard.performance-status-chip :status="$staffStatus" class="shrink-0" />
                 @endif
@@ -44,10 +44,10 @@
                     @endif
                 </div>
             </div>
-            <div class="flex flex-shrink-0 flex-wrap items-center justify-end gap-3 sm:gap-6">
+            <div class="flex shrink-0 flex-wrap items-center justify-end gap-3 sm:gap-6">
                 @if($chip)
                     <div class="hidden min-w-0 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600 sm:flex sm:gap-3 sm:px-4 sm:py-2">
-                        <svg class="h-3.5 w-3.5 flex-shrink-0 text-emerald-600 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <svg class="h-3.5 w-3.5 shrink-0 text-emerald-600 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         <span class="truncate">{{ $chip }}</span>
                     </div>
                 @endif
@@ -65,7 +65,7 @@
                     @endif
                 </div>
             </div>
-            <div class="flex flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-4">
+            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-4">
                 {{ $actions ?? '' }}
                 <x-dashboard.user-menu />
             </div>
@@ -81,7 +81,7 @@
                     @endif
                 </div>
             </div>
-            <div class="flex flex-shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-4">
+            <div class="flex shrink-0 flex-wrap items-center justify-end gap-2 sm:gap-4">
                 @isset($actions)
                     <div class="max-w-full min-w-0 flex flex-wrap justify-end gap-2">
                         {{ $actions }}
