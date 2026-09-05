@@ -7,6 +7,7 @@ use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\Concerns\NormalizesDepartmentInput;
 use App\Http\Requests\Concerns\ValidatesSectionHeadOtherDepartment;
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -31,7 +32,12 @@ class StoreSectionHeadRequest extends FormRequest
             'wing' => [
                 'required',
                 Rule::enum(Wing::class),
-                Rule::unique('users', 'wing')->where(fn ($query) => $query->where('role', UserRole::SectionHead->value)),
+                Rule::unique('users', 'wing')->where(
+                    fn ($query) => $query->whereIn(
+                        'id',
+                        User::role(UserRole::SectionHead->value)->select('users.id')
+                    )
+                ),
             ],
             'title' => ['nullable', 'string', 'max:255'],
             'departments' => ['required', 'array', 'min:1'],

@@ -55,8 +55,9 @@ original file untouched.
 **Node / npm is NOT needed on the server.** Front-end assets are built locally
 and shipped (see below).
 
-**SSH / cPanel Terminal** access is required to run `php artisan …`. If your plan
-has no terminal, enable "SSH Access" in cPanel or ask the host.
+**SSH / cPanel Terminal** is nice to have but **not required**. If shell access is
+disabled, use **File Manager + Cron Jobs** and [`deploy.sh`](deploy.sh) — full
+steps in [CPANEL-GITHUB-DEPLOY.md](CPANEL-GITHUB-DEPLOY.md) appendix (N4 / N7).
 
 ---
 
@@ -175,39 +176,54 @@ Both methods end with the **same "5. Post-deploy commands"**.
 
 ---
 
-## 5. Post-deploy commands (run in cPanel Terminal, in the app dir)
+## 5. Post-deploy commands (preserve all live data)
 
-Same for both methods. Order matters.
+**Never** run `migrate:fresh`, `db:wipe`, or drop the production database.
+`deploy.sh` and the commands below only run `migrate --force` (additive +
+backfill-then-drop legacy columns).
+
+### Preferred (no SSH): Cron → `deploy.sh`
+
+After code is on the server (`git pull` via cPanel Git, or the permanent N7 cron
+which pulls for you):
+
+```
+/bin/bash /home/kpidashb/kpi/deploy.sh >> /home/kpidashb/deploy.log 2>&1
+```
+
+See [CPANEL-GITHUB-DEPLOY.md](CPANEL-GITHUB-DEPLOY.md) §N4 (one-shot) and §N7
+(every 10 minutes after merge to `main`).
+
+### Or run by hand in cPanel Terminal (same steps as `deploy.sh`)
 
 ```bash
-# still in maintenance mode from step 4
+cd /home/kpidashb/kpi
 
 composer install --no-dev --optimize-autoloader --no-interaction   # skip if vendor/ was uploaded
 
-php artisan migrate --force        # additive only — see "What migrate does" below
+php artisan migrate --force        # additive / backfill only — NEVER migrate:fresh
 
-# perf-rbac-overhaul ONLY (skip if you merged migration-backfills into it):
 php artisan db:seed --class=RolePermissionSeeder --force
 
 php artisan storage:link           # first deploy only; harmless to repeat
 
-php artisan optimize:clear         # drop any stale caches from the old release
-php artisan optimize               # re-cache config + routes + views + events
-php artisan permission:cache-reset # clear Spatie's permission cache
+php artisan optimize:clear
+php artisan optimize
+php artisan permission:cache-reset
 
-php artisan up                     # site live again
+php artisan up                     # only if you put the site in maintenance earlier
 ```
 
 ### What `php artisan migrate --force` does on the live DB
 
 | Migration | Effect | Data risk |
 |-----------|--------|-----------|
-| `…_create_permission_tables` | `CREATE TABLE` roles / permissions / model_has_roles / model_has_permissions / role_has_permissions | none — new tables |
-| `…_add_lookup_indexes_for_dashboards` | `CREATE INDEX` on `users(role, wing)` and `media(mediable_type, mediable_id, collection_name)` | none — brief metadata lock only |
-| `…_backfill_spatie_roles_…` *(migration-backfills branch)* | inserts the roles/permissions and assigns each existing user the role matching its `users.role` column | none — writes only to the new Spatie tables |
+| `…_create_permission_tables` | `CREATE TABLE` roles / permissions / pivots | none — new tables |
+| `…_add_lookup_indexes_for_dashboards` | indexes (role/wing later replaced by wing-only) | none — brief metadata lock |
+| `…_backfill_and_drop_legacy_user_columns` | **1)** copy leftover `users.department` → `user_departments`; **2)** sync `users.role` → Spatie `model_has_roles`; **3)** drop those two columns | none for user data — backfill runs **before** drops; aborts if a role cannot be mapped |
 
-`RolePermissionSeeder` (the `db:seed` line) does the **same backfill** for the
-`perf-rbac-overhaul`-only path. It is idempotent — safe to run more than once.
+`RolePermissionSeeder` refreshes the permission matrix. It is idempotent — safe
+to run more than once. It does **not** delete users or observations.
 
 **MySQL note (rare):** if `migrate` stops with
 `SQLSTATE[42000] … 1071 Specified key was too long`, your MySQL is older than
@@ -282,10 +298,15 @@ amber classes at runtime — so you do **not** need to touch `public/build`.
 
 ## 9. cPanel housekeeping (optional but recommended)
 
+- **Auto-deploy cron (no SSH)** — after merging to `main`, permanent job every
+  10 minutes (see [CPANEL-GITHUB-DEPLOY.md](CPANEL-GITHUB-DEPLOY.md) §N7):
+  ```
+  */10 * * * * /bin/bash /home/kpidashb/kpi/deploy.sh >> /home/kpidashb/autodeploy.log 2>&1
+  ```
 - **Scheduler cron** (for `pulse:purge` and future scheduled tasks) — cPanel →
   *Cron Jobs* → every minute:
   ```
-  * * * * * cd /home/kpidashb/kpi && php artisan schedule:run >> /dev/null 2>&1
+  * * * * * cd /home/kpidashb/kpi && /usr/local/bin/php artisan schedule:run >> /dev/null 2>&1
   ```
 - **Static-asset caching** — add to `public/.htaccess`:
   ```apache
@@ -297,4 +318,4 @@ amber classes at runtime — so you do **not** need to touch `public/build`.
   ```
 - After changing the role → permission matrix in `app/Support/Rbac.php`, re-run
   `php artisan db:seed --class=RolePermissionSeeder --force` and
-  `php artisan permission:cache-reset`.
+  `php artisan permission:cache-reset` (or just let `deploy.sh` do it).

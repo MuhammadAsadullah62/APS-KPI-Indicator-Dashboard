@@ -61,7 +61,7 @@
 <script>
     let observerRequiresObservationContext = @json(auth()->check() && auth()->user()->canAccessObservations());
     let defaultObservationWing = @json(auth()->user()?->wing?->value);
-    let defaultObservationDepartment = @json(auth()->user()?->department?->value);
+    let defaultObservationDepartment = @json(collect(auth()->user()?->departments ?? [])->first());
     let auditCounter = 0;
     const quantMetrics = ["Student Achievement", "Student Progress", "Lesson Planning", "Assessment Quality", "Attendance"];
     const qualMetrics = ["Student-Centricity", "Professional Ethics", "Classroom Culture", "Communication", "Collaboration", "Innovation"];

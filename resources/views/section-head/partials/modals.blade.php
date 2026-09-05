@@ -4,15 +4,16 @@
 @endphp
 
 <div id="createSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
-        <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50 sticky top-0 z-10">
+    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="min-h-0 overflow-y-auto">
+        <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50 sticky top-0 z-10">
             <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Register SectionHead</h3>
             <button type="button" onclick="toggleModal('createSecHeadModal')" class="text-slate-400"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
         <form action="{{ route('section-heads.store') }}" method="post" enctype="multipart/form-data" class="p-10 space-y-10">
             @csrf
             <div class="flex justify-center">
-                <div class="relative group">
+                <div class="relative group w-32 h-32">
                     <div class="w-32 h-32 relative rounded-full shadow-lg border-4 border-white overflow-hidden bg-aps-green flex items-center justify-center text-white font-black text-5xl" id="createInitials">NEW</div>
                     <img id="createAvatarPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-full" alt="">
                     <button type="button" onclick="document.getElementById('createAvatar').click()" class="absolute right-0 -bottom-2 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center border-2 border-white shadow-xl"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
@@ -40,8 +41,8 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Institutional email <span class="text-red-500">*</span></label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Institutional password <span class="text-red-500">*</span></label><input type="password" name="password" required autocomplete="new-password" minlength="8" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Email <span class="text-red-500">*</span></label><input type="email" name="email" value="{{ old('email') }}" required autocomplete="username" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Password <span class="text-red-500">*</span></label><input type="password" name="password" required autocomplete="new-password" minlength="8" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-semibold outline-none focus:border-aps-green"></div>
             </div>
             <div>
                 <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2">Title (optional)</label>
@@ -72,55 +73,27 @@
                 <button type="submit" class="bg-aps-green text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Create Profile</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
-<div id="viewSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200">
-        <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50">
-            <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Section head profile</h3>
-            <button type="button" onclick="toggleModal('viewSecHeadModal')" class="text-slate-400"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-        </div>
-        <div class="p-12 space-y-10">
-            <div class="flex flex-col sm:flex-row sm:items-start gap-10">
-                <div class="relative w-32 h-32 shrink-0 mx-auto sm:mx-0">
-                    <img id="viewShAvatar" src="" alt="" class="hidden w-32 h-32 rounded-[2.5rem] object-cover shadow-xl border border-slate-100"
-                        onerror="this.onerror=null;this.classList.add('hidden');document.getElementById('viewShInitials').classList.remove('hidden');">
-                    <div id="viewShInitials" class="w-32 h-32 bg-aps-green rounded-[2.5rem] flex items-center justify-center text-white text-5xl font-black shadow-xl">?</div>
-                </div>
-                <div class="grid w-full min-w-0 sm:flex-1 grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-5">
-                    <div class="min-w-0 sm:pr-1">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Name</p>
-                        <p id="viewShName" class="text-base sm:text-lg font-black text-slate-800 mt-1 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                    <div class="min-w-0 sm:pl-1">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Employee ID</p>
-                        <p id="viewShEmp" class="text-base sm:text-lg font-black text-slate-800 mt-1 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Email</p>
-                        <p id="viewShEmail" class="text-sm sm:text-base font-bold text-aps-green mt-1 break-words [overflow-wrap:anywhere] leading-relaxed"></p>
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Wing</p>
-                        <p id="viewShWing" class="text-base sm:text-lg font-black text-slate-800 mt-1 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                    <div class="min-w-0 sm:col-span-2">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Departments</p>
-                        <p id="viewShDepartments" class="text-sm font-bold text-slate-700 leading-relaxed mt-2 break-words [overflow-wrap:anywhere]"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8 pt-8 border-t border-slate-100 flex justify-end">
-                <button type="button" onclick="toggleModal('viewSecHeadModal')" class="bg-slate-900 text-white px-12 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
+<x-directory.view-modal
+    id="viewSecHeadModal"
+    title="Section head profile"
+    avatar-id="viewShAvatar"
+    initials-id="viewShInitials"
+    :fields="[
+        ['label' => 'Name', 'id' => 'viewShName'],
+        ['label' => 'Employee ID', 'id' => 'viewShEmp'],
+        ['label' => 'Email', 'id' => 'viewShEmail', 'full' => true, 'email' => true],
+        ['label' => 'Wing', 'id' => 'viewShWing', 'full' => true],
+        ['label' => 'Departments', 'id' => 'viewShDepartments', 'full' => true],
+    ]" />
 
 <div id="editSecHeadModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] items-center justify-center p-6">
-    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden border border-slate-200 max-h-[90vh] overflow-y-auto">
-        <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50/50 sticky top-0 z-10">
+    <div class="bg-white w-full max-w-4xl rounded-[3rem] shadow-2xl border border-slate-200 max-h-[90vh] overflow-hidden flex flex-col">
+        <div class="min-h-0 overflow-y-auto">
+        <div class="p-10 border-b border-slate-100 flex justify-between bg-slate-50 sticky top-0 z-10">
             <h3 class="text-3xl font-black text-slate-800 tracking-tight uppercase leading-none">Update Profile</h3>
             <button type="button" onclick="toggleModal('editSecHeadModal')" class="text-slate-400"><svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
         </div>
@@ -128,7 +101,7 @@
             @csrf
             @method('PUT')
             <div class="flex justify-center">
-                <div class="relative group">
+                <div class="relative group w-32 h-32">
                     <div class="w-32 h-32 relative rounded-full shadow-lg border-4 border-white overflow-hidden bg-aps-green flex items-center justify-center text-white font-black text-5xl" id="editInitials">?</div>
                     <img id="editAvatarPreview" src="" class="absolute inset-0 w-full h-full object-cover hidden rounded-full" alt="">
                     <button type="button" onclick="document.getElementById('editAvatar').click()" class="absolute right-0 -bottom-2 w-10 h-10 bg-slate-900 text-white rounded-full flex items-center justify-center border-2 border-white shadow-xl hover:bg-aps-green transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg></button>
@@ -152,7 +125,7 @@
                 </div>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Institutional email <span class="text-red-500">*</span></label><input type="email" id="edit_sh_email" name="email" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
+                <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Email <span class="text-red-500">*</span></label><input type="email" id="edit_sh_email" name="email" required class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
                 <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Change Password</label><input type="password" id="edit_sh_password" name="password" placeholder="Leave blank to keep same" autocomplete="new-password" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
             </div>
             <div><label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-2 px-1">Title (optional)</label><input type="text" id="edit_sh_title" name="title" class="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-black outline-none"></div>
@@ -180,6 +153,7 @@
                 <button type="submit" class="bg-aps-green text-white px-10 py-4 rounded-2xl font-black text-sm uppercase tracking-widest shadow-xl">Save Changes</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 

@@ -26,7 +26,7 @@
                 </button>
             </div>
 
-            <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-10 space-y-8 sm:space-y-10 lg:space-y-12 no-scrollbar bg-slate-50/30">
+            <div class="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6 lg:p-10 space-y-8 sm:space-y-10 lg:space-y-12 bg-slate-50/30">
                 @auth
                     @if(auth()->user()->canAccessObservations())
                         <div id="observationContextCard" class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 p-4 sm:p-6 md:p-8 lg:p-10 shadow-sm min-w-0">

@@ -19,10 +19,11 @@ class AuthorizationTest extends TestCase
 
     private function userWithRole(UserRole $role): User
     {
-        return User::factory()->create([
-            'role' => $role,
-            'wing' => $role === UserRole::SectionHead ? Wing::Senior : ($role === UserRole::Faculty ? Wing::Senior : null),
-        ]);
+        return User::factory()
+            ->role($role)
+            ->create([
+                'wing' => $role === UserRole::SectionHead ? Wing::Senior : ($role === UserRole::Faculty ? Wing::Senior : null),
+            ]);
     }
 
     /**
@@ -85,7 +86,7 @@ class AuthorizationTest extends TestCase
     {
         $faculty = $this->userWithRole(UserRole::Faculty);
         $sectionHead = $this->userWithRole(UserRole::SectionHead);
-        $target = User::factory()->create(['role' => UserRole::SectionHead, 'wing' => Wing::Middle]);
+        $target = User::factory()->role(UserRole::SectionHead)->create(['wing' => Wing::Middle]);
 
         // Faculty cannot create faculty or section heads.
         $this->actingAs($faculty)->post('/faculty', [])->assertForbidden();
@@ -101,17 +102,17 @@ class AuthorizationTest extends TestCase
 
     public function test_wingless_section_head_cannot_reach_observations(): void
     {
-        $sh = User::factory()->create(['role' => UserRole::SectionHead, 'wing' => null]);
+        $sh = User::factory()->role(UserRole::SectionHead)->create(['wing' => null]);
 
         $this->actingAs($sh)->get('/observations')->assertForbidden();
     }
 
-    public function test_role_column_change_resyncs_spatie_role(): void
+    public function test_sync_roles_updates_spatie_identity(): void
     {
-        $user = User::factory()->create(['role' => UserRole::Faculty]);
+        $user = User::factory()->role(UserRole::Faculty)->create();
         $this->assertTrue($user->hasRole('faculty'));
 
-        $user->update(['role' => UserRole::Principal]);
+        $user->syncRoles([UserRole::Principal->value]);
 
         $this->assertTrue($user->fresh()->hasRole('principal'));
         $this->assertFalse($user->fresh()->hasRole('faculty'));

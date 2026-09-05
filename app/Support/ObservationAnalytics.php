@@ -100,7 +100,7 @@ final class ObservationAnalytics
 
         $users = User::query()
             ->whereIn('id', $summaries->keys()->all())
-            ->with(['avatarMedia', 'assignedDepartments'])
+            ->with(['avatarMedia', 'assignedDepartments', 'roles'])
             ->get()
             ->keyBy('id');
 

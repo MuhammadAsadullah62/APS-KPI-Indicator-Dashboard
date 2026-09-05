@@ -14,7 +14,7 @@
             @if($showName)
                 <div class="text-right leading-none hidden sm:block">
                     <p class="text-sm font-bold text-slate-900 truncate max-w-[12rem]">{{ $u->name }}</p>
-                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">{{ $u->role->label() }}</p>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase mt-1">{{ $u->roleLabel() }}</p>
                 </div>
             @endif
             <x-avatar :user="$u" box="w-10 h-10 rounded-xl" :px="40"

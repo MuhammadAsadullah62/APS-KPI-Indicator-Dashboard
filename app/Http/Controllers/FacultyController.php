@@ -19,8 +19,7 @@ class FacultyController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = User::query()
-            ->where('role', UserRole::Faculty)
+        $query = User::role(UserRole::Faculty->value)
             ->with(['avatarMedia', 'assignedDepartments'])
             ->orderBy('name');
 
@@ -59,13 +58,12 @@ class FacultyController extends Controller
             'employee_id' => $employeeId,
             'email' => $request->string('email')->toString(),
             'password' => Hash::make($request->string('password')->toString()),
-            'role' => UserRole::Faculty,
             'wing' => $wing,
-            'department' => null,
             'other_department_label' => $hasOther ? trim($request->string('other_department_label')->toString()) : null,
             'title' => $request->filled('title') ? $request->string('title')->toString() : null,
         ]);
 
+        $user->assignRole(UserRole::Faculty->value);
         $user->syncDepartments($departmentValues);
 
         AvatarService::replaceFor($user, $request->file('avatar'));
@@ -98,7 +96,6 @@ class FacultyController extends Controller
             'name' => $request->string('name')->toString(),
             'email' => $request->string('email')->toString(),
             'wing' => $wing,
-            'department' => null,
             'other_department_label' => $hasOther ? trim($request->string('other_department_label')->toString()) : null,
             'title' => $request->filled('title') ? $request->string('title')->toString() : null,
         ];

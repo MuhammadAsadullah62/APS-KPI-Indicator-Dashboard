@@ -38,7 +38,7 @@
                             </div>
                         </td>
                         <td class="px-8 py-5">
-                            <span class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest">{{ $row['user']->role->label() }}</span>
+                            <span class="px-3 py-1 bg-slate-100 rounded-lg text-[10px] font-black text-slate-600 uppercase tracking-widest">{{ $row['user']->roleLabel() }}</span>
                         </td>
                         <td class="px-8 py-5 text-sm font-bold text-slate-600">{{ $row['user']->wing?->label() ?? '—' }}</td>
                         <td class="px-8 py-5 text-sm font-semibold text-slate-700 max-w-[14rem]">

@@ -51,9 +51,9 @@ class DashboardAnalyticsTest extends TestCase
 
     public function test_rankings_order_by_average_score(): void
     {
-        $principal = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);
-        $strong = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::Senior, 'name' => 'Strong']);
-        $weak = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::Senior, 'name' => 'Weak']);
+        $principal = User::factory()->role(UserRole::Principal)->create(['wing' => null]);
+        $strong = User::factory()->role(UserRole::Faculty)->create(['wing' => Wing::Senior, 'name' => 'Strong']);
+        $weak = User::factory()->role(UserRole::Faculty)->create(['wing' => Wing::Senior, 'name' => 'Weak']);
 
         $this->recordObservation($principal, $strong, 5.0);
         $this->recordObservation($principal, $weak, 2.0);
@@ -66,11 +66,11 @@ class DashboardAnalyticsTest extends TestCase
 
     public function test_principal_dashboard_query_count_is_bounded(): void
     {
-        $principal = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);
-        $sh = User::factory()->create(['role' => UserRole::SectionHead, 'wing' => Wing::Senior]);
+        $principal = User::factory()->role(UserRole::Principal)->create(['wing' => null]);
+        $sh = User::factory()->role(UserRole::SectionHead)->create(['wing' => Wing::Senior]);
 
         foreach (range(1, 6) as $i) {
-            $faculty = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::cases()[$i % 3]]);
+            $faculty = User::factory()->role(UserRole::Faculty)->create(['wing' => Wing::cases()[$i % 3]]);
             $this->recordObservation($principal, $faculty, 3.0 + ($i % 3));
             $this->recordObservation($principal, $sh, 4.0);
         }
@@ -91,9 +91,9 @@ class DashboardAnalyticsTest extends TestCase
 
     public function test_every_role_dashboard_renders(): void
     {
-        $principal = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);
-        $sh = User::factory()->create(['role' => UserRole::SectionHead, 'wing' => Wing::Senior]);
-        $faculty = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::Senior]);
+        $principal = User::factory()->role(UserRole::Principal)->create(['wing' => null]);
+        $sh = User::factory()->role(UserRole::SectionHead)->create(['wing' => Wing::Senior]);
+        $faculty = User::factory()->role(UserRole::Faculty)->create(['wing' => Wing::Senior]);
 
         $this->recordObservation($sh, $faculty, 4.0);
         $this->recordObservation($principal, $sh, 3.0);
@@ -108,9 +108,9 @@ class DashboardAnalyticsTest extends TestCase
 
     public function test_new_observation_invalidates_cached_rankings(): void
     {
-        $principal = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);
-        $a = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::Senior]);
-        $b = User::factory()->create(['role' => UserRole::Faculty, 'wing' => Wing::Senior]);
+        $principal = User::factory()->role(UserRole::Principal)->create(['wing' => null]);
+        $a = User::factory()->role(UserRole::Faculty)->create(['wing' => Wing::Senior]);
+        $b = User::factory()->role(UserRole::Faculty)->create(['wing' => Wing::Senior]);
 
         $this->recordObservation($principal, $a, 5.0);
         $this->recordObservation($principal, $b, 4.0);
