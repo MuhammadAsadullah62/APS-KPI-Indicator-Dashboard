@@ -21,6 +21,7 @@ class RolePermissionSeeder extends Seeder
             Permission::findOrCreate($permission, 'web');
         }
 
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
         foreach (Rbac::matrix() as $roleName => $permissions) {
             $role = Role::findOrCreate($roleName, 'web');
             $role->syncPermissions($permissions);
