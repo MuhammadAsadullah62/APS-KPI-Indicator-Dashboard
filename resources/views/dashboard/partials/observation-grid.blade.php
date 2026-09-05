@@ -15,7 +15,7 @@
                     img-class="shadow-lg border border-slate-100 shrink-0"
                     fallback-class="{{ $bg }} text-white text-xl sm:text-2xl md:text-3xl shadow-lg shrink-0" />
                 <div class="flex-1 min-w-0">
-                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $obsUser->role->label() }}</p>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">{{ $obsUser->roleLabel() }}</p>
                     <h3 class="text-lg sm:text-xl md:text-2xl font-black text-slate-800 group-hover:text-aps-green transition-colors leading-tight sm:leading-none truncate">{{ $obsUser->name }}</h3>
                     <p class="text-sm text-slate-500 font-bold mt-2 normal-case leading-snug">
                         @if($obsUser->wing)

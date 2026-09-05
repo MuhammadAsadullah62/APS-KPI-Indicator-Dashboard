@@ -21,8 +21,7 @@ class SectionHeadController extends Controller
     {
         $user = $request->user();
 
-        $sectionHeadsQuery = User::query()
-            ->where('role', UserRole::SectionHead)
+        $sectionHeadsQuery = User::role(UserRole::SectionHead->value)
             ->with(['avatarMedia', 'assignedDepartments'])
             ->orderBy('name');
 
@@ -64,13 +63,12 @@ class SectionHeadController extends Controller
             'employee_id' => InstitutionalEmployeeId::next($wing, true),
             'email' => $request->string('email')->toString(),
             'password' => Hash::make($request->string('password')->toString()),
-            'role' => UserRole::SectionHead,
             'wing' => $wing,
             'title' => $request->filled('title') ? $request->string('title')->toString() : null,
-            'department' => null,
             'other_department_label' => $hasOther ? trim($request->string('other_department_label')->toString()) : null,
         ]);
 
+        $user->assignRole(UserRole::SectionHead->value);
         $user->syncDepartments($departmentValues);
 
         AvatarService::replaceFor($user, $request->file('avatar'));

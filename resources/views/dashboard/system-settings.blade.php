@@ -52,7 +52,7 @@
                         </div>
                         <div>
                             <dt class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Department</dt>
-                            <dd class="mt-1 font-semibold text-slate-800">{{ $u->department?->label() ?? '—' }}</dd>
+                            <dd class="mt-1 font-semibold text-slate-800">{{ $u->departmentsLabelForDisplay() }}</dd>
                         </div>
                     </dl>
                     <div class="pt-8 border-t border-slate-100">
@@ -108,9 +108,13 @@
                                         <div>
                                             <p class="text-sm text-slate-800 leading-none">{{ $row->name }}</p>
                                             @php
-                                                $sub = array_values(array_filter([$row->wing?->label(), $row->department?->label()]));
+                                                $deptLine = $row->departmentsLabelForDisplay();
+                                                $sub = array_values(array_filter([
+                                                    $row->wing?->label(),
+                                                    $deptLine !== '—' ? $deptLine : null,
+                                                ]));
                                             @endphp
-                                            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">{{ count($sub) ? implode(' • ', $sub) : $row->role->label() }}</p>
+                                            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-wider">{{ count($sub) ? implode(' • ', $sub) : $row->roleLabel() }}</p>
                                         </div>
                                     </td>
                                     <td class="px-8 py-5 text-right">
@@ -119,8 +123,8 @@
                                             'employee_id' => $row->employee_id,
                                             'email' => $row->email,
                                             'wing_label' => $row->wing?->label(),
-                                            'department_label' => $row->department?->label(),
-                                            'role_label' => $row->role->label(),
+                                            'department_label' => $row->departmentsLabelForDisplay(),
+                                            'role_label' => $row->roleLabel(),
                                             'avatar' => $row->avatarUrl(),
                                             'initials' => $row->initials(),
                                         ]" />

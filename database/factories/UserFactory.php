@@ -17,6 +17,10 @@ class UserFactory extends Factory
     public function configure(): static
     {
         return $this->afterCreating(function (User $user): void {
+            if ($user->roles()->count() === 0) {
+                $user->assignRole(UserRole::Faculty->value);
+            }
+
             if (! $user->isFaculty()) {
                 return;
             }
@@ -36,11 +40,18 @@ class UserFactory extends Factory
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
-            'role' => UserRole::Faculty,
             'wing' => Wing::Senior,
-            'department' => null,
             'title' => null,
         ];
+    }
+
+    public function role(UserRole|string $role): static
+    {
+        $value = $role instanceof UserRole ? $role->value : $role;
+
+        return $this->afterCreating(function (User $user) use ($value): void {
+            $user->syncRoles([$value]);
+        });
     }
 
     public function unverified(): static

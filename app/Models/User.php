@@ -20,39 +20,13 @@ class User extends Authenticatable
 {
     use HasFactory, HasRoles, Notifiable;
 
-    /**
-     * Keep the Spatie role in lock-step with the `role` enum column, which
-     * stays the single "primary role" the UI and factories depend on.
-     */
-    protected static function booted(): void
-    {
-        static::saved(function (User $user): void {
-            if (! $user->wasRecentlyCreated && ! $user->wasChanged('role')) {
-                return;
-            }
-
-            $value = $user->role instanceof UserRole ? $user->role->value : (string) $user->role;
-            if ($value === '' || $user->roles->pluck('name')->all() === [$value]) {
-                return;
-            }
-
-            try {
-                $user->syncRoles([$value]);
-            } catch (\Spatie\Permission\Exceptions\RoleDoesNotExist) {
-                // Roles not seeded yet (e.g. a bare test DB) — nothing to sync.
-            }
-        });
-    }
-
     protected $fillable = [
         'name',
         'email',
         'employee_id',
-        'role',
         'title',
         'password',
         'wing',
-        'department',
         'other_department_label',
     ];
 
@@ -66,9 +40,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
             'wing' => Wing::class,
-            'department' => Department::class,
         ];
     }
 
@@ -159,28 +131,35 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->hasRole(UserRole::Admin->value);
     }
 
     public function isPrincipal(): bool
     {
-        if ($this->role instanceof UserRole) {
-            return $this->role === UserRole::Principal;
-        }
-
-        $raw = $this->getRawOriginal('role');
-
-        return is_string($raw) && UserRole::tryFrom($raw) === UserRole::Principal;
+        return $this->hasRole(UserRole::Principal->value);
     }
 
     public function isSectionHead(): bool
     {
-        return $this->role === UserRole::SectionHead;
+        return $this->hasRole(UserRole::SectionHead->value);
     }
 
     public function isFaculty(): bool
     {
-        return $this->role === UserRole::Faculty;
+        return $this->hasRole(UserRole::Faculty->value);
+    }
+
+    public function roleLabel(): string
+    {
+        $name = $this->relationLoaded('roles')
+            ? $this->roles->first()?->name
+            : $this->roles()->value('name');
+
+        if (! is_string($name) || $name === '') {
+            return '—';
+        }
+
+        return UserRole::tryFrom($name)?->label() ?? $name;
     }
 
     public function canAccessQuantQualObservationPages(): bool
@@ -212,28 +191,20 @@ class User extends Authenticatable
 
     public function departmentsLabelForDisplay(): string
     {
-        if ($this->isFaculty() || $this->isSectionHead()) {
-            $labels = collect($this->departments)->map(function ($v) {
-                if (! is_string($v)) {
-                    return null;
-                }
-                if ($v === Department::Other->value) {
-                    return filled($this->other_department_label)
-                        ? 'Other ('.$this->other_department_label.')'
-                        : Department::Other->label();
-                }
-
-                return Department::tryFrom($v)?->label();
-            })->filter()->values();
-
-            if ($labels->isNotEmpty()) {
-                return $labels->implode(', ');
+        $labels = collect($this->departments)->map(function ($v) {
+            if (! is_string($v)) {
+                return null;
+            }
+            if ($v === Department::Other->value) {
+                return filled($this->other_department_label)
+                    ? 'Other ('.$this->other_department_label.')'
+                    : Department::Other->label();
             }
 
-            return $this->department?->label() ?? '—';
-        }
+            return Department::tryFrom($v)?->label();
+        })->filter()->values();
 
-        return $this->department?->label() ?? '—';
+        return $labels->isNotEmpty() ? $labels->implode(', ') : '—';
     }
 
     public function canAccessSystemSettings(): bool
@@ -281,8 +252,7 @@ class User extends Authenticatable
 
     public static function departmentValuesAssignedToSectionHeads(): Collection
     {
-        $staffIds = static::query()
-            ->whereIn('role', [UserRole::SectionHead, UserRole::Faculty])
+        $staffIds = static::role([UserRole::SectionHead->value, UserRole::Faculty->value])
             ->pluck('id');
 
         return UserDepartment::query()

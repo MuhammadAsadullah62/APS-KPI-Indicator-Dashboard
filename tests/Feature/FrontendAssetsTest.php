@@ -17,7 +17,7 @@ class FrontendAssetsTest extends TestCase
 
     public function test_layout_uses_compiled_bundle_not_cdn(): void
     {
-        $user = User::factory()->create(['role' => UserRole::Principal, 'wing' => null]);
+        $user = User::factory()->role(UserRole::Principal)->create(['wing' => null]);
 
         $html = $this->actingAs($user)->get('/')->assertOk()->getContent();
 

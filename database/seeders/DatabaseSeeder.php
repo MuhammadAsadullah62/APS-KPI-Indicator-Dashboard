@@ -22,7 +22,6 @@ class DatabaseSeeder extends Seeder
                 'name' => 'Farhat Noor',
                 'employee_id' => 'APS-KHN-P001',
                 'title' => 'Principal APSAC Khanewal',
-                'role' => UserRole::Principal,
                 'password' => Hash::make((string) env('ADMIN_SEED_PASSWORD', 'password')),
             ]
         );

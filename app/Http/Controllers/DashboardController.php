@@ -243,8 +243,7 @@ class DashboardController extends Controller
             }
 
             return [
-                $wing->value => User::query()
-                    ->where('role', UserRole::Faculty)
+                $wing->value => User::role(UserRole::Faculty->value)
                     ->where('wing', $wing)
                     ->with(['avatarMedia', 'assignedDepartments'])
                     ->orderBy('name')
@@ -254,8 +253,7 @@ class DashboardController extends Controller
 
         $facultyUnassigned = collect();
         if ($user->isAdmin() || $user->isPrincipal()) {
-            $facultyUnassigned = User::query()
-                ->where('role', UserRole::Faculty)
+            $facultyUnassigned = User::role(UserRole::Faculty->value)
                 ->whereNull('wing')
                 ->with(['avatarMedia', 'assignedDepartments'])
                 ->orderBy('name')
@@ -267,14 +265,12 @@ class DashboardController extends Controller
         if ($user->canViewSystemSettingsOverview()) {
             $stats = [
                 'total_users' => User::count(),
-                'section_heads' => User::where('role', UserRole::SectionHead)->count(),
-                'faculty' => User::where('role', UserRole::Faculty)->count(),
-                'leadership' => User::query()
-                    ->whereIn('role', [UserRole::Admin, UserRole::Principal])
-                    ->count(),
+                'section_heads' => User::role(UserRole::SectionHead->value)->count(),
+                'faculty' => User::role(UserRole::Faculty->value)->count(),
+                'leadership' => User::role([UserRole::Admin->value, UserRole::Principal->value])->count(),
             ];
             $recentUsers = User::query()
-                ->with('avatarMedia')
+                ->with(['avatarMedia', 'assignedDepartments', 'roles'])
                 ->latest()
                 ->limit(10)
                 ->get();
@@ -311,23 +307,20 @@ class DashboardController extends Controller
 
         $observees = collect();
         if ($user->isAdmin() || $user->isPrincipal()) {
-            $observees = User::query()
-                ->where('role', UserRole::SectionHead)
-                ->with(['avatarMedia', 'assignedDepartments'])
+            $observees = User::role(UserRole::SectionHead->value)
+                ->with(['avatarMedia', 'assignedDepartments', 'roles'])
                 ->orderBy('name')
                 ->get()
                 ->concat(
-                    User::query()
-                        ->where('role', UserRole::Faculty)
-                        ->with(['avatarMedia', 'assignedDepartments'])
+                    User::role(UserRole::Faculty->value)
+                        ->with(['avatarMedia', 'assignedDepartments', 'roles'])
                         ->orderBy('name')
                         ->get()
                 );
         } elseif ($user->isSectionHead()) {
-            $observees = User::query()
-                ->where('role', UserRole::Faculty)
+            $observees = User::role(UserRole::Faculty->value)
                 ->where('wing', $user->wing)
-                ->with(['avatarMedia', 'assignedDepartments'])
+                ->with(['avatarMedia', 'assignedDepartments', 'roles'])
                 ->orderBy('name')
                 ->get();
         }
