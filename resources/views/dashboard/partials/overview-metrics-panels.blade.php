@@ -5,15 +5,30 @@
     $maxScale = 5;
     $pct = fn ($score) => min(100, max(0, ((float) $score / $maxScale) * 100));
     $aggregatedSessions = (int) ($aggregatedSessions ?? 0);
+    $kpiQualPct = $kpiQualAveragePercent ?? ObservationAnalytics::averageQualPercentFromMetricRow($qualRaw);
+    $kpiQuantPct = $kpiQuantAveragePercent ?? ObservationAnalytics::averageQuantPercentFromMetricRow($quantRaw);
+    $qualKpiBar = ObservationAnalytics::kpiTierBarBgClass($kpiQualPct);
+    $quantKpiBar = ObservationAnalytics::kpiTierBarBgClass($kpiQuantPct);
     $hasQualScore = collect(ObservationAnalytics::QUAL_METRICS)
         ->contains(fn (string $n) => isset($qualRaw[$n]) && is_numeric($qualRaw[$n]));
     $hasQuantScore = collect(ObservationAnalytics::QUANT_METRICS)
         ->contains(fn (string $n) => isset($quantRaw[$n]) && is_numeric($quantRaw[$n]));
     $hasAnyScore = $hasQualScore || $hasQuantScore;
 @endphp
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-    <div class="bg-white p-8 rounded-[2rem] border border-slate-200 shadow-sm">
-        <h3 class="text-lg font-black text-slate-800 mb-8">Qualitative <span class="text-slate-400 font-bold text-xs">(avg. rubric 1–{{ $maxScale }})</span></h3>
+<div class="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2">
+    <div class="bg-white p-4 sm:p-6 lg:p-8 rounded-[1.5rem] sm:rounded-[2rem] border border-slate-200 shadow-sm min-w-0">
+        <h3 class="text-base font-black text-slate-800 sm:text-lg">Qualitative Observation</h3>
+        <div class="mt-5 mb-8 rounded-2xl border border-slate-200 bg-slate-50/80 px-5 py-4">
+            <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Overall qualitative average</p>
+            <div class="flex items-end justify-between gap-4 mt-1">
+                <p class="text-3xl font-black text-slate-900 leading-none">{{ $kpiQualPct !== null ? number_format($kpiQualPct, 1) : '—' }}<span class="text-base font-bold text-slate-400">%</span></p>
+            </div>
+            <div class="mt-3 w-full h-3 rounded-full bg-slate-200/90 overflow-hidden">
+                @if ($kpiQualPct !== null)
+                    <div class="h-full rounded-full {{ $qualKpiBar }} transition-all" style="width: {{ min(100, max(0, $kpiQualPct)) }}%"></div>
+                @endif
+            </div>
+        </div>
         <div class="space-y-6">
             @foreach (ObservationAnalytics::QUAL_METRICS as $name)
                 @php($score = $qualRaw[$name] ?? null)
@@ -25,7 +40,7 @@
                     </div>
                     <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
                         @if ($score !== null)
-                            <div class="bg-aps-green h-full rounded-full transition-all" style="width: {{ $pct($score) }}%"></div>
+                            <div class="h-full rounded-full {{ ObservationAnalytics::kpiTierBarBgClass($pct($score)) }} transition-all" style="width: {{ $pct($score) }}%"></div>
                         @else
                             <div class="bg-transparent h-full"></div>
                         @endif
@@ -36,9 +51,20 @@
     </div>
 
     <div class="bg-slate-900 p-8 rounded-[2rem] text-white flex flex-col gap-6 relative overflow-hidden">
-        <div class="z-10">
-            <h3 class="text-lg font-black mb-2 uppercase tracking-widest text-emerald-400">Quantitative <span class="text-slate-500 font-bold text-xs normal-case">(avg. rubric 1–{{ $maxScale }})</span></h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
+        <div class="z-10 w-full">
+            <h3 class="text-base font-black mb-1 uppercase tracking-widest text-emerald-400 sm:text-lg">Quantitative Observation</h3>
+            <div class="mb-6 rounded-2xl border border-white/10 bg-white/5 px-5 py-4">
+                <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Overall quantitative average</p>
+                <div class="flex items-end justify-between gap-4 mt-1">
+                    <p class="text-3xl font-black text-white leading-none">{{ $kpiQuantPct !== null ? number_format($kpiQuantPct, 1) : '—' }}<span class="text-base font-bold text-slate-400">%</span></p>
+                </div>
+                <div class="mt-3 w-full h-3 rounded-full bg-white/10 overflow-hidden">
+                    @if ($kpiQuantPct !== null)
+                        <div class="h-full rounded-full {{ $quantKpiBar }} transition-all" style="width: {{ min(100, max(0, $kpiQuantPct)) }}%"></div>
+                    @endif
+                </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 @foreach (ObservationAnalytics::QUANT_METRICS as $name)
                     @php($score = $quantRaw[$name] ?? null)
                     @php($score = is_numeric($score) ? (float) $score : null)
@@ -47,7 +73,7 @@
                         <p class="text-2xl font-black text-white">{{ $score !== null ? number_format($score, 2) : '—' }}</p>
                         <div class="mt-2 w-full bg-white/10 h-1.5 rounded-full overflow-hidden">
                             @if ($score !== null)
-                                <div class="bg-emerald-400 h-full rounded-full" style="width: {{ $pct($score) }}%"></div>
+                                <div class="h-full rounded-full {{ ObservationAnalytics::kpiTierBarBgClass($pct($score)) }}" style="width: {{ $pct($score) }}%"></div>
                             @endif
                         </div>
                     </div>

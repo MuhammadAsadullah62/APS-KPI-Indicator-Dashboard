@@ -4,7 +4,7 @@
 
 @section('body-class', 'flex h-screen overflow-hidden text-slate-900 font-semibold')
 
-@section('content-padding', 'p-12 space-y-8')
+@section('content-padding', 'p-4 space-y-6 sm:p-6 sm:space-y-8 lg:p-8 xl:p-10')
 
 @section('header')
     <x-dashboard.page-header variant="bare" title="Faculty Performance Audit" subtitle="Aggregate Review Portal: Quantitative (70%) + Qualitative (30%)" padding="px-10 py-8" />
@@ -33,6 +33,23 @@
     .chevron-icon { transition: transform 0.3s ease; }
     .chevron-active { transform: rotate(180deg); }
     .modal-active { align-items: center; justify-content: center; }
+    .js-observation-records-details[open] .observation-records-chevron { transform: rotate(180deg); }
+    /* Audit portal: scrollable full-viewport on small screens, centered on sm+ */
+    #observationModal.modal-active {
+        align-items: flex-start !important;
+        justify-content: flex-start !important;
+        padding: max(0.25rem, env(safe-area-inset-top, 0px)) max(0.5rem, env(safe-area-inset-right, 0px)) max(0.5rem, env(safe-area-inset-bottom, 0px)) max(0.5rem, env(safe-area-inset-left, 0px)) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+    }
+    @media (min-width: 640px) {
+        #observationModal.modal-active {
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 1.5rem !important;
+        }
+    }
 </style>
 @endpush
 
@@ -43,9 +60,8 @@
 @push('scripts')
 <script>
     let observerRequiresObservationContext = @json(auth()->check() && auth()->user()->canAccessObservations());
-    let currentObserveeIsFaculty = false;
     let defaultObservationWing = @json(auth()->user()?->wing?->value);
-    let defaultObservationDepartment = @json(auth()->user()?->department?->value);
+    let defaultObservationDepartment = @json(collect(auth()->user()?->departments ?? [])->first());
     let auditCounter = 0;
     const quantMetrics = ["Student Achievement", "Student Progress", "Lesson Planning", "Assessment Quality", "Attendance"];
     const qualMetrics = ["Student-Centricity", "Professional Ethics", "Classroom Culture", "Communication", "Collaboration", "Innovation"];
@@ -66,8 +82,7 @@
         btn.textContent = 'Submit Evaluation';
     }
 
-    function setObservationContextForObservee(isFacultyObservee) {
-        currentObserveeIsFaculty = !!isFacultyObservee;
+    function setupObservationContextFields() {
         var card = document.getElementById('observationContextCard');
         var wingSel = document.getElementById('observation_context_wing');
         var deptSel = document.getElementById('observation_context_department');
@@ -76,30 +91,17 @@
         var reqMark = document.getElementById('observationContextRequiredMark');
         if (!card || !wingSel || !deptSel || !wingNull || !deptNull) return;
 
-        if (currentObserveeIsFaculty) {
-            card.classList.add('hidden');
-            wingSel.disabled = true;
-            deptSel.disabled = true;
-            wingSel.required = false;
-            deptSel.required = false;
-            wingNull.disabled = false;
-            deptNull.disabled = false;
-            wingNull.value = '';
-            deptNull.value = '';
-            if (reqMark) reqMark.classList.add('hidden');
-        } else {
-            card.classList.remove('hidden');
-            wingSel.disabled = false;
-            deptSel.disabled = false;
-            wingSel.required = true;
-            deptSel.required = true;
-            wingNull.disabled = true;
-            deptNull.disabled = true;
-            wingNull.value = '';
-            deptNull.value = '';
-            if (reqMark) reqMark.classList.remove('hidden');
-            resetObservationContext();
-        }
+        card.classList.remove('hidden');
+        wingSel.disabled = false;
+        deptSel.disabled = false;
+        wingSel.required = true;
+        deptSel.required = true;
+        wingNull.disabled = true;
+        deptNull.disabled = true;
+        wingNull.value = '';
+        deptNull.value = '';
+        if (reqMark) reqMark.classList.remove('hidden');
+        resetObservationContext();
     }
 
     function resetObservationContext() {
@@ -153,6 +155,23 @@
         const modal = document.getElementById(modalId);
         modal.classList.toggle('hidden');
         modal.classList.toggle('modal-active');
+        if (modalId === 'observationModal') {
+            if (!modal.classList.contains('hidden')) {
+                document.body.classList.add('overflow-hidden');
+            } else {
+                document.body.classList.remove('overflow-hidden');
+            }
+        }
+    }
+
+    function setObserveeProfileContext(d) {
+        const wEl = document.getElementById('observeeContextWing');
+        const dEl = document.getElementById('observeeContextDepartment');
+        if (!wEl || !dEl) return;
+        const w = d && d.wing_label;
+        wEl.textContent = (w != null && String(w).trim() !== '') ? String(w) : '—';
+        const dept = d && d.departments_label;
+        dEl.textContent = (dept != null && String(dept).trim() !== '' && String(dept) !== '—') ? String(dept) : '—';
     }
 
     function openAuditPortal(data) {
@@ -161,23 +180,28 @@
         oid.value = data.id;
         oid.setAttribute('data-last-value', String(data.id));
         document.getElementById('modalFacultyName').textContent = data.name;
+        setObserveeProfileContext(data);
         document.getElementById('auditEntriesContainer').innerHTML = '';
         document.getElementById('observation_overall_notes').value = '';
         auditCounter = 0;
         document.getElementById('auditCount').textContent = '0';
-        document.getElementById('totalScore').textContent = '0%';
-        setObservationContextForObservee(data.observee_is_faculty === true);
+        document.getElementById('totalScore').textContent = '—';
+        setupObservationContextFields();
         toggleModal('observationModal');
         addNewAudit(null);
     }
 
     function openEditObservation(obs) {
         setFormModeEdit(obs.id);
-        setObservationContextForObservee(obs.observee_is_faculty === true);
+        setupObservationContextFields();
         const oid = document.getElementById('store_observee_id');
         oid.value = obs.observee_id;
         oid.setAttribute('data-last-value', String(obs.observee_id ?? ''));
         document.getElementById('modalFacultyName').textContent = obs.observee_name || '';
+        setObserveeProfileContext({
+            wing_label: obs.observee_wing_label,
+            departments_label: obs.observee_departments_label,
+        });
         document.getElementById('auditEntriesContainer').innerHTML = '';
         auditCounter = 0;
         document.getElementById('observation_overall_notes').value = obs.notes || '';
@@ -190,7 +214,7 @@
             });
         }
         calculateAggregateScore();
-        if (!obs.observee_is_faculty) {
+        if (observerRequiresObservationContext) {
             var wingEl = document.getElementById('observation_context_wing');
             var deptEl = document.getElementById('observation_context_department');
             if (wingEl) wingEl.value = obs.observation_wing || '';
@@ -212,6 +236,53 @@
             const input = row.querySelector('input.rating-input[value="' + String(val) + '"]');
             if (input) input.checked = true;
         });
+    }
+
+    function auditRubricComplete(audit) {
+        const qN = audit.querySelectorAll('.quant-metrics-list input.rating-input:checked').length;
+        const lN = audit.querySelectorAll('.qual-metrics-list input.rating-input:checked').length;
+        return qN === quantMetrics.length && lN === qualMetrics.length;
+    }
+
+    function eachAuditRubricComplete() {
+        const audits = document.querySelectorAll('.audit-entry');
+        for (let i = 0; i < audits.length; i++) {
+            if (!auditRubricComplete(audits[i])) {
+                return false;
+            }
+        }
+        return audits.length > 0;
+    }
+
+    /**
+     * Matches server: 70% quant + 30% qual per session, then mean across sessions.
+     * @returns {number|null} Rounded 0–100, or null if any session is incomplete.
+     */
+    function clientWeightedAggregatePercent() {
+        const audits = document.querySelectorAll('.audit-entry');
+        if (audits.length === 0) {
+            return null;
+        }
+        for (let i = 0; i < audits.length; i++) {
+            if (!auditRubricComplete(audits[i])) {
+                return null;
+            }
+        }
+        var globalSum = 0;
+        for (let a = 0; a < audits.length; a++) {
+            const audit = audits[a];
+            var qSum = 0, lSum = 0;
+            audit.querySelectorAll('.quant-metrics-list input.rating-input:checked').forEach(function (i) {
+                qSum += parseInt(i.value, 10);
+            });
+            audit.querySelectorAll('.qual-metrics-list input.rating-input:checked').forEach(function (i) {
+                lSum += parseInt(i.value, 10);
+            });
+            var qAvg = (qSum / (quantMetrics.length * 5)) * 100;
+            var lAvg = (lSum / (qualMetrics.length * 5)) * 100;
+            globalSum += (qAvg * 0.7) + (lAvg * 0.3);
+        }
+        return Math.round(globalSum / audits.length);
     }
 
     function collectObservationPayload() {
@@ -251,7 +322,7 @@
             return;
         }
 
-        if (observerRequiresObservationContext && !currentObserveeIsFaculty) {
+        if (observerRequiresObservationContext) {
             var w = document.getElementById('observation_context_wing');
             var d = document.getElementById('observation_context_department');
             if (!w || !d || !w.value || !d.value) {
@@ -265,10 +336,16 @@
             alert('Add at least one observation session.');
             return;
         }
-        var scoreText = document.getElementById('totalScore').textContent.replace(/%/g, '').trim();
-        var agg = parseInt(scoreText, 10);
-        if (isNaN(agg)) agg = 0;
-        document.getElementById('store_aggregate_percent').value = agg;
+        if (!eachAuditRubricComplete()) {
+            alert('Every session must have all quantitative and qualitative items rated 1–5 before submitting.');
+            return;
+        }
+        var agg = clientWeightedAggregatePercent();
+        if (agg === null) {
+            alert('A valid total score could not be calculated. Complete every rubric item in each session (1–5).');
+            return;
+        }
+        document.getElementById('store_aggregate_percent').value = String(agg);
         document.getElementById('store_sessions_payload').value = JSON.stringify(sessions);
         observationFormEl().submit();
     }
@@ -331,24 +408,13 @@
     function calculateAggregateScore() {
         const audits = document.querySelectorAll('.audit-entry');
         document.getElementById('auditCount').textContent = audits.length;
-
+        const totalEl = document.getElementById('totalScore');
         if (audits.length === 0) {
-            document.getElementById('totalScore').textContent = '0%';
+            totalEl.textContent = '—';
             return;
         }
-
-        let globalSumPercent = 0;
-        audits.forEach(audit => {
-            let qSum = 0, qCount = 0, lSum = 0, lCount = 0;
-            audit.querySelectorAll('.quant-metrics-list input:checked').forEach(i => { qSum += parseInt(i.value); qCount++; });
-            audit.querySelectorAll('.qual-metrics-list input:checked').forEach(i => { lSum += parseInt(i.value); lCount++; });
-            let qAvg = qCount > 0 ? (qSum / (qCount * 5)) * 100 : 0;
-            let lAvg = lCount > 0 ? (lSum / (lCount * 5)) * 100 : 0;
-            globalSumPercent += (qAvg * 0.7) + (lAvg * 0.3);
-        });
-
-        const finalScore = Math.round(globalSumPercent / audits.length);
-        document.getElementById('totalScore').textContent = finalScore + '%';
+        const p = clientWeightedAggregatePercent();
+        totalEl.textContent = p === null ? '—' : (p + '%');
     }
 
     document.addEventListener('DOMContentLoaded', function () {

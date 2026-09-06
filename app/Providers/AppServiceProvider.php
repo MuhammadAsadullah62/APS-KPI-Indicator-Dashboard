@@ -12,16 +12,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        Gate::before(function ($user, string $ability) {
-            if ($ability !== 'viewPulse') {
-                return null;
-            }
-
-            if (! $user instanceof User) {
-                return false;
-            }
-
-            return $user->isAdmin() || $user->isPrincipal();
+        Gate::define('viewPulse', function ($user = null): bool {
+            return $user instanceof User && $user->can('pulse.view');
         });
     }
 }

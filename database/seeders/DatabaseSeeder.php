@@ -14,15 +14,18 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
-        User::query()->updateOrCreate(
+        $this->call(RolePermissionSeeder::class);
+
+        $principal = User::query()->updateOrCreate(
             ['email' => 'farhat.noor@apsacskhanewal.edu.pk'],
             [
                 'name' => 'Farhat Noor',
                 'employee_id' => 'APS-KHN-P001',
                 'title' => 'Principal APSAC Khanewal',
-                'role' => UserRole::Principal,
                 'password' => Hash::make((string) env('ADMIN_SEED_PASSWORD', 'password')),
             ]
         );
+
+        $principal->syncRoles([UserRole::Principal->value]);
     }
 }

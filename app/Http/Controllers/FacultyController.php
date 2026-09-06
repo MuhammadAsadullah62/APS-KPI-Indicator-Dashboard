@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Department;
-use App\Enums\MediaType;
 use App\Enums\UserRole;
 use App\Enums\Wing;
 use App\Http\Requests\StoreFacultyRequest;
 use App\Http\Requests\UpdateFacultyRequest;
 use App\Models\Media;
 use App\Models\User;
+use App\Support\AvatarService;
 use App\Support\InstitutionalEmployeeId;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,14 +19,11 @@ class FacultyController extends Controller
 {
     public function index(Request $request): View
     {
-        abort_if($request->user()?->isFaculty(), 403);
-
-        $query = User::query()
-            ->where('role', UserRole::Faculty)
-            ->with('avatarMedia')
+        $query = User::role(UserRole::Faculty->value)
+            ->with(['avatarMedia', 'assignedDepartments'])
             ->orderBy('name');
 
-        if ($request->user()?->isSectionHead() || $request->user()?->isFaculty()) {
+        if ($request->user()?->isSectionHead()) {
             $headWing = $request->user()->wing?->value;
             if ($headWing) {
                 $query->where('wing', $headWing);
@@ -53,18 +49,24 @@ class FacultyController extends Controller
 
         $employeeId = InstitutionalEmployeeId::next($wing, false);
 
+        $departmentValues = $request->normalizedDepartments();
+
+        $hasOther = $request->hasOtherDepartment();
+
         $user = User::create([
             'name' => $request->string('name')->toString(),
             'employee_id' => $employeeId,
             'email' => $request->string('email')->toString(),
             'password' => Hash::make($request->string('password')->toString()),
-            'role' => UserRole::Faculty,
             'wing' => $wing,
-            'department' => $request->enum('department', Department::class),
+            'other_department_label' => $hasOther ? trim($request->string('other_department_label')->toString()) : null,
             'title' => $request->filled('title') ? $request->string('title')->toString() : null,
         ]);
 
-        $this->syncAvatar($user, $request->file('avatar'));
+        $user->assignRole(UserRole::Faculty->value);
+        $user->syncDepartments($departmentValues);
+
+        AvatarService::replaceFor($user, $request->file('avatar'));
 
         return redirect()->route('teachermanagement')->with('status', 'Faculty member registered. Employee ID: '.$user->employee_id);
     }
@@ -86,11 +88,15 @@ class FacultyController extends Controller
 
         abort_if($request->user()->isSectionHead() && ! $wing, 403);
 
+        $departmentValues = $request->normalizedDepartments();
+
+        $hasOther = $request->hasOtherDepartment();
+
         $data = [
             'name' => $request->string('name')->toString(),
             'email' => $request->string('email')->toString(),
             'wing' => $wing,
-            'department' => $request->enum('department', Department::class),
+            'other_department_label' => $hasOther ? trim($request->string('other_department_label')->toString()) : null,
             'title' => $request->filled('title') ? $request->string('title')->toString() : null,
         ];
 
@@ -100,14 +106,15 @@ class FacultyController extends Controller
 
         $user->update($data);
 
-        $this->syncAvatar($user, $request->file('avatar'));
+        $user->syncDepartments($departmentValues);
+
+        AvatarService::replaceFor($user, $request->file('avatar'));
 
         return redirect()->route('teachermanagement')->with('status', 'Faculty record updated.');
     }
 
     public function destroy(Request $request, User $user): RedirectResponse
     {
-        abort_unless($request->user()?->isAdmin() || $request->user()?->isPrincipal() || $request->user()?->isSectionHead(), 403);
         abort_unless($user->isFaculty(), 404);
 
         if ($request->user()->isSectionHead()) {
@@ -121,26 +128,5 @@ class FacultyController extends Controller
         $user->delete();
 
         return redirect()->route('teachermanagement')->with('status', 'Faculty member removed.');
-    }
-
-    private function syncAvatar(User $user, ?\Illuminate\Http\UploadedFile $file): void
-    {
-        if ($file === null) {
-            return;
-        }
-
-        $user->mediaItems()->where('collection_name', 'avatar')->get()->each(fn (Media $m) => $m->deleteWithFile());
-
-        $path = $file->store('avatars', 'public');
-
-        $user->mediaItems()->create([
-            'collection_name' => 'avatar',
-            'disk' => 'public',
-            'path' => $path,
-            'original_filename' => $file->getClientOriginalName(),
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize() ?: null,
-            'type' => MediaType::Image,
-        ]);
     }
 }

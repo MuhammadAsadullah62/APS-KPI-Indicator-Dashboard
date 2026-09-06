@@ -7,8 +7,8 @@
         default => 'w-12 h-12 rounded-xl',
     };
     $titleCls = match ($size) {
-        'lg' => 'text-3xl',
-        default => 'text-2xl',
+        'lg' => 'text-2xl sm:text-3xl',
+        default => 'text-xl sm:text-2xl',
     };
     $subtitleCls = match ($size) {
         'lg' => 'text-sm',

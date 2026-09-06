@@ -13,7 +13,6 @@ return new class extends Migration
             $table->foreignId('observer_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('observee_id')->constrained('users')->cascadeOnDelete();
             $table->unsignedTinyInteger('aggregate_percent')->nullable();
-            $table->json('sessions_payload')->nullable();
             $table->timestamps();
 
             $table->index(['observer_id', 'created_at']);

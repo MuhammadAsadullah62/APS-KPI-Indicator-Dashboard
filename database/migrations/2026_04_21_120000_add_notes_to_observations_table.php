@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('observations', function (Blueprint $table) {
-            $table->text('notes')->nullable()->after('sessions_payload');
+            $table->text('notes')->nullable()->after('aggregate_percent');
         });
     }
 

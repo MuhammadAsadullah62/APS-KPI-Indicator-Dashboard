@@ -8,30 +8,28 @@
 
 @section('content')
             @php
+                use App\Support\ObservationAnalytics;
                 $qual = $qualitative ?? [];
                 $qv = fn (string $name) => isset($qual[$name]) && is_numeric($qual[$name]) ? (float) $qual[$name] : null;
                 $qualPct = fn (?float $s) => $s === null ? null : min(100, max(0, ($s / 5) * 100));
-                $qualFillClass = fn (?float $s) => match (true) {
-                    $s === null => '',
-                    $s < 2 => 'bg-rose-500',
-                    $s < 3 => 'bg-amber-400',
-                    $s < 4 => 'bg-emerald-500',
-                    default => 'bg-aps-green',
-                };
+                $lAvg = $qualAveragePercent ?? null;
+                if ($lAvg === null && isset($aggregateQualitativePercent) && $aggregateQualitativePercent !== null) {
+                    $lAvg = (float) $aggregateQualitativePercent;
+                }
+                $lBar = $qualBarClass ?? ($lAvg !== null ? ObservationAnalytics::kpiTierBarBgClass($lAvg) : 'bg-slate-300');
             @endphp
-            <div class="bg-aps-green p-10 rounded-[2.5rem] shadow-xl text-white relative overflow-hidden group">
-                <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                    <div class="text-center md:text-left">
-                        <p class="text-xs font-bold text-emerald-300 uppercase tracking-[0.3em] mb-2">Aggregate Qualitative Weight</p>
-                        <h3 class="text-6xl font-black leading-none">{{ isset($aggregateQualitativePercent) && $aggregateQualitativePercent !== null ? $aggregateQualitativePercent.'%' : '—' }}</h3>
-                        <p class="mt-4 text-sm text-emerald-100/80 max-w-sm">Institutional analysis based on student interaction, professional ethics, and innovation.</p>
-                    </div>
+            <div class="bg-white rounded-2xl sm:rounded-[2.5rem] border border-slate-200 shadow-sm p-4 sm:p-6 md:p-10 mb-6 sm:mb-8 relative overflow-hidden min-w-0">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Your qualitative observation average</p>
+                <h3 class="text-4xl sm:text-5xl md:text-6xl font-black text-slate-900 leading-none">{{ $lAvg !== null ? number_format($lAvg, 1) : '—' }}<span class="text-xl sm:text-2xl font-bold text-slate-400">%</span></h3>
+                <div class="mt-6 w-full h-4 rounded-full bg-slate-100 overflow-hidden">
+                    @if ($lAvg !== null)
+                        <div class="h-full rounded-full {{ $lBar }} transition-all" style="width: {{ min(100, max(0, $lAvg)) }}%"></div>
+                    @endif
                 </div>
-                <div class="absolute -right-20 -bottom-20 w-80 h-80 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700"></div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div class="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-10 font-semibold">
+            <div class="grid grid-cols-1 gap-6 sm:gap-8 lg:grid-cols-2 min-w-0">
+                <div class="bg-white p-5 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8 sm:space-y-10 font-semibold min-w-0">
                     <div class="space-y-4">
                         <div class="flex justify-between items-end">
                             <div>
@@ -43,7 +41,7 @@
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             @php($s = $qv('Student-Centricity'))
                             @if ($s !== null)
-                                <div class="h-full rounded-full transition-all {{ $qualFillClass($s) }}" style="width: {{ $qualPct($s) }}%"></div>
+                                <div class="h-full rounded-full transition-all {{ $s !== null && $qualPct($s) !== null ? ObservationAnalytics::kpiTierBarBgClass((float) $qualPct($s)) : '' }}" style="width: {{ $qualPct($s) }}%"></div>
                             @endif
                         </div>
                     </div>
@@ -59,7 +57,7 @@
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             @php($s = $qv('Professional Ethics'))
                             @if ($s !== null)
-                                <div class="h-full rounded-full transition-all {{ $qualFillClass($s) }}" style="width: {{ $qualPct($s) }}%"></div>
+                                <div class="h-full rounded-full transition-all {{ $s !== null && $qualPct($s) !== null ? ObservationAnalytics::kpiTierBarBgClass((float) $qualPct($s)) : '' }}" style="width: {{ $qualPct($s) }}%"></div>
                             @endif
                         </div>
                     </div>
@@ -75,15 +73,15 @@
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             @php($s = $qv('Classroom Culture'))
                             @if ($s !== null)
-                                <div class="h-full rounded-full transition-all {{ $qualFillClass($s) }}" style="width: {{ $qualPct($s) }}%"></div>
+                                <div class="h-full rounded-full transition-all {{ $s !== null && $qualPct($s) !== null ? ObservationAnalytics::kpiTierBarBgClass((float) $qualPct($s)) : '' }}" style="width: {{ $qualPct($s) }}%"></div>
                             @endif
                         </div>
                     </div>
                 </div>
 
-                <div class="bg-white p-10 rounded-[2.5rem] border border-slate-200 shadow-sm space-y-10 font-semibold">
+                <div class="bg-white p-5 sm:p-8 md:p-10 rounded-2xl sm:rounded-[2.5rem] border border-slate-200 shadow-sm space-y-8 sm:space-y-10 font-semibold min-w-0">
                     <div class="space-y-4">
-                        <div class="flex justify-between items-end">
+                        <div class="flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-end">
                             <div>
                                 <h4 class="text-lg font-black text-slate-800">Communication</h4>
                                 <p class="text-xs text-slate-400 font-medium italic">Parent & student communication</p>
@@ -93,7 +91,7 @@
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             @php($s = $qv('Communication'))
                             @if ($s !== null)
-                                <div class="h-full rounded-full transition-all {{ $qualFillClass($s) }}" style="width: {{ $qualPct($s) }}%"></div>
+                                <div class="h-full rounded-full transition-all {{ $s !== null && $qualPct($s) !== null ? ObservationAnalytics::kpiTierBarBgClass((float) $qualPct($s)) : '' }}" style="width: {{ $qualPct($s) }}%"></div>
                             @endif
                         </div>
                     </div>
@@ -109,7 +107,7 @@
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             @php($s = $qv('Collaboration'))
                             @if ($s !== null)
-                                <div class="h-full rounded-full transition-all {{ $qualFillClass($s) }}" style="width: {{ $qualPct($s) }}%"></div>
+                                <div class="h-full rounded-full transition-all {{ $s !== null && $qualPct($s) !== null ? ObservationAnalytics::kpiTierBarBgClass((float) $qualPct($s)) : '' }}" style="width: {{ $qualPct($s) }}%"></div>
                             @endif
                         </div>
                     </div>
@@ -125,7 +123,7 @@
                         <div class="w-full h-3 bg-slate-100 rounded-full overflow-hidden border border-slate-100">
                             @php($s = $qv('Innovation'))
                             @if ($s !== null)
-                                <div class="h-full rounded-full transition-all {{ $qualFillClass($s) }}" style="width: {{ $qualPct($s) }}%"></div>
+                                <div class="h-full rounded-full transition-all {{ $s !== null && $qualPct($s) !== null ? ObservationAnalytics::kpiTierBarBgClass((float) $qualPct($s)) : '' }}" style="width: {{ $qualPct($s) }}%"></div>
                             @endif
                         </div>
                     </div>

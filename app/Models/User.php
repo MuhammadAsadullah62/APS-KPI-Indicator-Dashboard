@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\Department;
 use App\Enums\UserRole;
 use App\Enums\Wing;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -13,21 +14,19 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
         'name',
         'email',
         'employee_id',
-        'role',
         'title',
         'password',
         'wing',
-        'department',
-        'departments',
         'other_department_label',
     ];
 
@@ -41,11 +40,45 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'role' => UserRole::class,
             'wing' => Wing::class,
-            'department' => Department::class,
-            'departments' => 'array',
         ];
+    }
+
+    public function assignedDepartments(): HasMany
+    {
+        return $this->hasMany(UserDepartment::class);
+    }
+
+    /**
+     * Multi-department assignments (section heads and faculty) via `user_departments`.
+     *
+     * @return Attribute<list<string>, never>
+     */
+    protected function departments(): Attribute
+    {
+        return Attribute::make(
+            get: function () {
+                if ($this->relationLoaded('assignedDepartments')) {
+                    return $this->assignedDepartments->pluck('department')->values()->all();
+                }
+
+                return $this->assignedDepartments()->pluck('department')->all();
+            },
+        );
+    }
+
+    /**
+     * @param  list<string>  $departmentValues
+     */
+    public function syncDepartments(array $departmentValues): void
+    {
+        $this->assignedDepartments()->delete();
+        foreach ($departmentValues as $value) {
+            if (! is_string($value) || $value === '') {
+                continue;
+            }
+            $this->assignedDepartments()->create(['department' => $value]);
+        }
     }
 
     public function mediaItems(): MorphMany
@@ -72,14 +105,6 @@ class User extends Authenticatable
 
     public function canOpenObservationsPortalForObservee(User $observee): bool
     {
-        if ($this->isFaculty()) {
-            return false;
-        }
-
-        if ($this->isAdmin() || $this->isPrincipal()) {
-            return $observee->isSectionHead() || $observee->isFaculty();
-        }
-
         return $this->canObserveUser($observee);
     }
 
@@ -106,84 +131,106 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return $this->role === UserRole::Admin;
+        return $this->hasRole(UserRole::Admin->value);
     }
 
     public function isPrincipal(): bool
     {
-        if ($this->role instanceof UserRole) {
-            return $this->role === UserRole::Principal;
-        }
-
-        $raw = $this->getRawOriginal('role');
-
-        return is_string($raw) && UserRole::tryFrom($raw) === UserRole::Principal;
+        return $this->hasRole(UserRole::Principal->value);
     }
 
     public function isSectionHead(): bool
     {
-        return $this->role === UserRole::SectionHead;
+        return $this->hasRole(UserRole::SectionHead->value);
     }
 
     public function isFaculty(): bool
     {
-        return $this->role === UserRole::Faculty;
+        return $this->hasRole(UserRole::Faculty->value);
+    }
+
+    public function roleLabel(): string
+    {
+        $name = $this->relationLoaded('roles')
+            ? $this->roles->first()?->name
+            : $this->roles()->value('name');
+
+        if (! is_string($name) || $name === '') {
+            return '—';
+        }
+
+        return UserRole::tryFrom($name)?->label() ?? $name;
     }
 
     public function canAccessQuantQualObservationPages(): bool
     {
-        return ! $this->isPrincipal() && ! $this->isAdmin();
+        return $this->can('metricpages.view');
+    }
+
+    /**
+     * Department labels for chip display in directory tables. "Other" is expanded
+     * to include the custom label when set.
+     *
+     * @return \Illuminate\Support\Collection<int, string>
+     */
+    public function departmentChipLabels(): Collection
+    {
+        return collect($this->departments ?? [])->map(function ($v) {
+            if (! is_string($v)) {
+                return null;
+            }
+            if ($v === Department::Other->value) {
+                return filled($this->other_department_label)
+                    ? 'Other ('.$this->other_department_label.')'
+                    : 'Other';
+            }
+
+            return Department::tryFrom($v)?->label();
+        })->filter()->values();
     }
 
     public function departmentsLabelForDisplay(): string
     {
-        if ($this->isFaculty()) {
-            return $this->department?->label() ?? '—';
-        }
+        $labels = collect($this->departments)->map(function ($v) {
+            if (! is_string($v)) {
+                return null;
+            }
+            if ($v === Department::Other->value) {
+                return filled($this->other_department_label)
+                    ? 'Other ('.$this->other_department_label.')'
+                    : Department::Other->label();
+            }
 
-        if ($this->isSectionHead()) {
-            $labels = collect($this->departments ?? [])->map(function ($v) {
-                if (! is_string($v)) {
-                    return null;
-                }
-                if ($v === Department::Other->value) {
-                    return filled($this->other_department_label)
-                        ? 'Other ('.$this->other_department_label.')'
-                        : Department::Other->label();
-                }
+            return Department::tryFrom($v)?->label();
+        })->filter()->values();
 
-                return Department::tryFrom($v)?->label();
-            })->filter()->values();
-
-            return $labels->isEmpty() ? '—' : $labels->implode(', ');
-        }
-
-        return $this->department?->label() ?? '—';
+        return $labels->isNotEmpty() ? $labels->implode(', ') : '—';
     }
 
     public function canAccessSystemSettings(): bool
     {
-        return $this->isAdmin()
-            || $this->isPrincipal()
-            || $this->isSectionHead()
-            || $this->isFaculty();
+        return $this->can('settings.view');
+    }
+
+    public function canUpdateOwnProfile(): bool
+    {
+        return $this->can('settings.updateOwnProfile');
     }
 
     public function canViewSystemSettingsOverview(): bool
     {
-        return $this->isAdmin() || $this->isPrincipal();
+        return $this->can('settings.overview');
     }
 
     public function canAccessObservations(): bool
     {
-        return $this->isAdmin()
-            || $this->isPrincipal()
-            || ($this->isSectionHead() && $this->wing !== null);
+        return $this->can('observations.view')
+            && (! $this->isSectionHead() || $this->wing !== null);
     }
 
     public function canObserveUser(User $observee): bool
     {
-        if ($this->isFaculty()) {
+        if (! $this->can('observations.record')) {
             return false;
         }
 
@@ -201,6 +248,10 @@ class User extends Authenticatable
 
     public function canEditObservation(\App\Models\Observation $observation): bool
     {
+        if ($this->isSectionHead()) {
+            return false;
+        }
+
         if ($this->isAdmin() || $this->isPrincipal()) {
             return true;
         }
@@ -210,10 +261,12 @@ class User extends Authenticatable
 
     public static function departmentValuesAssignedToSectionHeads(): Collection
     {
-        return static::query()
-            ->where('role', UserRole::SectionHead)
-            ->pluck('departments')
-            ->flatten()
+        $staffIds = static::role([UserRole::SectionHead->value, UserRole::Faculty->value])
+            ->pluck('id');
+
+        return UserDepartment::query()
+            ->whereIn('user_id', $staffIds)
+            ->pluck('department')
             ->filter(fn ($v) => is_string($v) && $v !== '')
             ->unique()
             ->values();
