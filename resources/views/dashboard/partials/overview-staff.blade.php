@@ -23,7 +23,7 @@
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 {{ $isFaculty ? 'mb-6' : 'mb-10' }}">
     @include('dashboard.partials.overview-top-card', ['label' => 'Top ranking · All staff', 'row' => $topStaff ?? null])
     @include('dashboard.partials.overview-top-card', ['label' => 'Top ranking · Section heads', 'row' => $topSectionHead ?? null])
-    @include('dashboard.partials.overview-top-card', ['label' => 'Top ranking · Teachers (your wing)', 'row' => $topWingTeacher ?? null])
+    @include('dashboard.partials.overview-top-card', ['label' => 'Top ranking · Teachers', 'row' => $topWingTeacher ?? null])
 </div>
 
 @if ($isFaculty)
@@ -52,7 +52,7 @@
                 ])
                 @if ($viewer->wing)
                     @include('dashboard.partials.overview-rank-position-bar', [
-                        'title' => 'Teachers · '.$viewer->wing->label().' (your wing)',
+                        'title' => 'Teachers · '.$viewer->wing->label(),
                         'rank' => $wingRankRow['rank'] ?? null,
                         'total' => (int) ($wingRankedCount ?? 0),
                     ])
@@ -103,7 +103,7 @@
         @if ($viewer->wing)
             @php($ownWingRows = ($rankFacultyByWing ?? collect())->get($viewer->wing->value) ?? collect())
             @include('dashboard.partials.overview-ranking-table', [
-                'title' => 'Teachers · '.$viewer->wing->label().' (your wing)',
+                'title' => 'Teachers · '.$viewer->wing->label(),
                 'rows' => $ownWingRows,
                 'viewer' => $viewer,
             ])
